@@ -32,12 +32,14 @@ public class Client{
 		System.out.println("Normal mode selected");
 
 
-		s.RRQ(PKG);
-		byte msg[] = s.getRead();
-
-		System.out.println(msg);
-		if (PKG.getRequest() == "WRQ"){
+		byte msg[];
+		
+		if (PKG.getRequest().equals ("WRQ")){
+			s.WRQ(PKG);
 			msg = s.getWrite();
+		}else{
+			s.RRQ(PKG);
+			msg = s.getRead();
 		}
 
 
@@ -82,7 +84,6 @@ public class Client{
 		receivePacket = new DatagramPacket(data, data.length);
 
 		try {
-
 			sendReceiveSocket.receive(receivePacket);
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -140,6 +141,56 @@ public class Client{
 			}
 			
 		}
+		
+		if (data[1] == 4){
+			System.out.println("ACK packet received.");
+			int block = RP.getBlockNum();
+			System.out.println(blockNum);
+			System.out.println(block);
+
+			if (block == blockNum){
+				
+				byte[] fileData = fileHandler.readFile();;
+				System.out.print(fileData.length);
+				byte[] sendData = new byte[4 + fileData.length];
+				sendData[0] = 0;
+				sendData[1] = 3;
+				
+				sendData[2] = (byte)(blockNum / 256);
+				sendData[3] = (byte)(blockNum % 256);
+				//	Save file data to data packet
+				for(int i = 0; i < fileData.length; i++) {
+					sendData[4 + i] = fileData[i];
+				}
+				
+				
+				try {
+					sendPacket = new DatagramPacket(sendData, sendData.length,
+							InetAddress.getLocalHost(), 69);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				
+				try {
+					sendReceiveSocket.send(sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				
+				
+				if (fileData.length == 512){
+					blockNum++;
+					listenAndHandle(s, sendData);	
+				}else {
+					fileHandler.close();
+				}
+			}else {
+				//error
+			}
+		}
+		
 	}
 	
 	private int parseBlockNum(byte[] data) {
@@ -158,6 +209,8 @@ public class Client{
 	
 	
 	public void request(UI PKG, Send s) throws IOException{
+		//Verbose V = new Verbose();
+
 		mode = PKG.getMode();
 		switch (mode) {
 		/*		case "Quiet":
@@ -171,7 +224,7 @@ public class Client{
 
 		case "Verbose":
 			System.out.println("Verbose mode selected.");
-			//V.happy(PKG);
+			//V.happy(s, PKG);
 			break;	
 
 			/*	case "Test":
@@ -188,7 +241,6 @@ public class Client{
 		Send s = new Send ();
 
 		//		Quiet Q = new Quiet();
-		Verbose V = new Verbose();
 		//	Test T = new Test();
 
 

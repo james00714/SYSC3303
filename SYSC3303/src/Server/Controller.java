@@ -91,10 +91,9 @@ public class Controller {
 		fileHandler = new FileHandler();
 		//	Prepare the file to write
 		fileHandler.prepareWrite(filename);
-		blockNum = 0;
-		//	Send ACK packet (blockNum 0)
+		blockNum = 1;
+		//	Send ACK packet (blockNum 1)
 		SendDataPacket(new byte[0], blockNum);
-		blockNum++;
 	}
 	
 	/*
@@ -108,10 +107,11 @@ public class Controller {
 		if(blockNum == block) {		
 			//	Write data to the file, then send the ACK packet
 			fileHandler.writeFile(fileData);
+			blockNum++;
 			SendDataPacket(new byte[0], blockNum);
 			//	Close fileHandler if reached the end
 			if(fileData.length == 512) {	
-				blockNum++;
+				
 			}else {
 				fileHandler.close();
 			}			
@@ -169,8 +169,10 @@ public class Controller {
 		}
 
 		//	Close fileHandler if reached the end
-		if(data.length < 512) {
-			fileHandler.close();
+		if(data.length != 0){
+			if(data.length < 512) {
+				fileHandler.close();
+			}
 		}
 	}
 

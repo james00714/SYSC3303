@@ -30,7 +30,7 @@ public class RequestParser {
 				positionOf0.add(i);
 			}
 		}
-		if(type == 0 || type == 1) {
+		if(type == 2 || type == 1) {
 			filename = parseFilename(data, positionOf0.get(1) - 2);
 		}else if(type == 3 || type == 4) {
 			blockNum = parseBlockNum(data);

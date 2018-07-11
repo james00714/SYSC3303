@@ -2,55 +2,51 @@ package Client;
 
 import java.io.*;
 import java.net.*;
-public class Verbose {
+import java.util.*;
 
-	DatagramPacket sendPacket, receivePacket;
-	DatagramSocket sendReceiveSocket;
+public class Verbose{
+	private DatagramSocket sendReceiveSocket;
+	private DatagramPacket sendPacket, receivePacket;
+	private static String mode = "";
+	private static String fileName = "";
+	private static String request = "";
+	public static int blockNum;
+	public static FileHandler fileHandler;
+	public static RequestParser RP;
 
 	public Verbose()
 	{
-		try {
-			// Construct a datagram socket and bind it to any available 
-			// port on the local host machine. This socket will be used to
-			// send and receive UDP Datagram packets.
-			sendReceiveSocket = new DatagramSocket();
-		} catch (SocketException se) {   // Can't create the socket.
+		try {			
+			sendReceiveSocket = new DatagramSocket(30);
+		} catch (SocketException se) {  
 			se.printStackTrace();
 			System.exit(1);
 		}
 	}
 
-	public void happy(UI PKG)
+
+
+	public void happy (Send s, UI PKG) throws IOException
 	{
-		// Prepare a DatagramPacket and send it via sendReceiveSocket
-		// to port 5000 on the destination host.
 
-		String s = "Anyone there?";
-		System.out.println("Client: sending a packet containing:\n" + s);
+		System.out.println("Verbose mode selected");
 
-		// Java stores characters as 16-bit Unicode values, but 
-		// DatagramPackets store their messages as byte arrays.
-		// Convert the String into bytes according to the platform's 
-		// default character encoding, storing the result into a new 
-		// byte array.
 
-		byte msg[] = s.getBytes();
+		byte msg[];
+		
+		if (PKG.getRequest().equals ("WRQ")){
+			s.WRQ(PKG);
+			msg = s.getWrite();
+		}else{
+			s.RRQ(PKG);
+			msg = s.getRead();
+		}
 
-		// Construct a datagram packet that is to be sent to a specified port 
-		// on a specified host.
-		// The arguments are:
-		//  msg - the message contained in the packet (the byte array)
-		//  msg.length - the length of the byte array
-		//  InetAddress.getLocalHost() - the Internet address of the 
-		//     destination host.
-		//     In this example, we want the destination to be the same as
-		//     the source (i.e., we want to run the client and server on the
-		//     same computer). InetAddress.getLocalHost() returns the Internet
-		//     address of the local host.
-		//  5000 - the destination port number on the destination host.
+
+
 		try {
 			sendPacket = new DatagramPacket(msg, msg.length,
-					InetAddress.getLocalHost(), 5000);
+					InetAddress.getLocalHost(), 69);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -64,7 +60,7 @@ public class Verbose {
 		System.out.print("Containing: ");
 		System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
 
-		// Send the datagram packet to the server via the send/receive socket. 
+
 
 		try {
 			sendReceiveSocket.send(sendPacket);
@@ -75,42 +71,156 @@ public class Verbose {
 
 		System.out.println("Client: Packet sent.\n");
 
-		// Construct a DatagramPacket for receiving packets up 
-		// to 100 bytes long (the length of the byte array).
 
-		byte data[] = new byte[100];
+		
+		listenAndHandle(s, msg);
+		
+		
+		//		sendReceiveSocket.close();
+	}
+	
+	public void listenAndHandle(Send s, byte[] msg) throws IOException{
+		byte data[] = new byte[1024];
 		receivePacket = new DatagramPacket(data, data.length);
 
 		try {
-			// Block until a datagram is received via sendReceiveSocket.  
 			sendReceiveSocket.receive(receivePacket);
 		} catch(IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		// Process the received datagram.
+
 		System.out.println("Client: Packet received:");
 		System.out.println("From host: " + receivePacket.getAddress());
 		System.out.println("Host port: " + receivePacket.getPort());
-		len = receivePacket.getLength();
+		int len = receivePacket.getLength();
 		System.out.println("Length: " + len);
 		System.out.print("Containing: ");
 
-		// Form a String from the byte array.
+
 		String received = new String(data,0,len);   
 		System.out.println(received);
+		
+		RP = new RequestParser();
+		RP.parseRequest(data, len);
+		if (data[1] == 3) {
+			int block = RP.getBlockNum();
+			/*
+			for(int i = 0;i < data.length; i++){
+				System.out.println(data[i]);
+			}*/
+			if(block == blockNum){
+				fileHandler.writeFile(RP.getFileData());
+				if (len == 516){
+					blockNum++;
+					s.Ack(blockNum);
+					msg = s.getAck();
+					try {
+						sendPacket = new DatagramPacket(msg, msg.length,
+								InetAddress.getLocalHost(), 69);
+					} catch (UnknownHostException e) {
+						e.printStackTrace();
+						System.exit(1);
+					}
+					
+					try {
+						sendReceiveSocket.send(sendPacket);
+					} catch (IOException e) {
+						e.printStackTrace();
+						System.exit(1);
+					}
+					listenAndHandle(s, msg);
+				
+			}else{
+				
+					fileHandler.close();
+				}
+			}else{
+				// error
+			}
+			
+		}
+		
+		if (data[1] == 4){
+			System.out.println("ACK packet received.");
+			int block = RP.getBlockNum();
+			System.out.println(blockNum);
+			System.out.println(block);
 
-		// We're finished, so close the socket.
-		sendReceiveSocket.close();
-		
-		
+			if (block == blockNum){
+				
+				byte[] fileData = fileHandler.readFile();;
+				System.out.print(fileData.length);
+				byte[] sendData = new byte[4 + fileData.length];
+				sendData[0] = 0;
+				sendData[1] = 3;
+				
+				sendData[2] = (byte)(blockNum / 256);
+				sendData[3] = (byte)(blockNum % 256);
+				//	Save file data to data packet
+				for(int i = 0; i < fileData.length; i++) {
+					sendData[4 + i] = fileData[i];
+				}
+				
+				
+				try {
+					sendPacket = new DatagramPacket(sendData, sendData.length,
+							InetAddress.getLocalHost(), 69);
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				
+				try {
+					sendReceiveSocket.send(sendPacket);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.exit(1);
+				}
+				
+				
+				if (fileData.length == 512){
+					blockNum++;
+					listenAndHandle(s, sendData);	
+				}else {
+					fileHandler.close();
+				}
+			}else {
+				//error
+			}
+		}
 		
 	}
+	
+	private int parseBlockNum(byte[] data) {
+		int left = data[2];
+		int right = data[3];
+		if(left < 0) left += 256;
+		if(right < 0) right += 256;
+		return left * 256 + right;
+	}
 
-		public static void main(String[] args) {
-		      Verbose c = new Verbose();
-		      UI PKG = new UI ();  
-		      c.happy(PKG);
-		}
+	public void quit(){
+
+		sendReceiveSocket.close();
+		System.exit(1);
+	}	
+	
+	
+	public static void main(String[] args) throws IOException{
+		Client c = new Client();
+
+		UI PKG = new UI ();
+		Send s = new Send ();
+
+		Verbose V = new Verbose();
+
+
+		UI.IT1(c, PKG, s);
+
+	}
+
+
+
 }

@@ -1,5 +1,7 @@
 package Client;
 
+import java.io.IOException;
+
 public class Send {
 	private static String mode;
 	private static String fileName;
@@ -60,19 +62,22 @@ public class Send {
 
 	}
 
-	public static void WRQ(UI PKG){
+	public static void WRQ(UI PKG) throws IOException{
 		fileName = PKG.getFileName();
 		byte[] length = fileName.getBytes();
-		read = new byte [3+length.length];
-		read[0] = 0;
-		read[1] = 2;
+		Client.fileHandler = new FileHandler();
+		Client.fileHandler.openStream(fileName);
+		Client.blockNum = 1;
+		write = new byte [3+length.length];
+		write[0] = 0;
+		write[1] = 2;
 		
 		for (int i = 0; i < length.length; i++){
-			read[2+i] = length[i];
+			write[2+i] = length[i];
 			
 		}
 		
-		read[2+length.length] = 0;
+		write[2+length.length] = 0;
 
 	}
 

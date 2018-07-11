@@ -19,6 +19,18 @@ public class FileHandler {
 	
 	public FileHandler() {}
 	
+	public void openStream(String file){
+		if(!file.contains("\\")) {
+			file = path + "\\" + file;
+		}	
+		//	Try loading the file
+		try {
+			fs = new FileInputStream(file);
+			fileBuffer = new byte[512];
+        }catch (IOException e) {
+        	e.printStackTrace();
+        }
+	}
 	/*
 	 * Method to handle read request
 	 * In: file path or name
