@@ -86,9 +86,16 @@ public class FileHandler {
 	 * */
 	public void prepareWrite(String file) {
     
-		if(!file.contains("\\")) {
-			file = path + "\\" + file;
+		if(file.contains("\\")) {
+			int index = 0;
+			for(int i = 0; i < file.length(); i++){
+				if(file.charAt(i) == '\\'){
+					index = i;
+				}
+			}
+			file = file.substring(index, file.length());
 		}
+		file = path + "\\" + file;
 		try{
 			fileToWrite = new File(file);
 			// create if does not exists

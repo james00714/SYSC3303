@@ -17,7 +17,7 @@ public class Verbose{
 	public Verbose()
 	{
 		try {			
-			sendReceiveSocket = new DatagramSocket(30);
+			sendReceiveSocket = new DatagramSocket(31);
 		} catch (SocketException se) {  
 			se.printStackTrace();
 			System.exit(1);
@@ -46,7 +46,7 @@ public class Verbose{
 
 		try {
 			sendPacket = new DatagramPacket(msg, msg.length,
-					InetAddress.getLocalHost(), 69);
+					InetAddress.getLocalHost(), 23);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			System.exit(1);
@@ -118,7 +118,7 @@ public class Verbose{
 					msg = s.getAck();
 					try {
 						sendPacket = new DatagramPacket(msg, msg.length,
-								InetAddress.getLocalHost(), 69);
+								InetAddress.getLocalHost(), 23);
 					} catch (UnknownHostException e) {
 						e.printStackTrace();
 						System.exit(1);
@@ -166,7 +166,7 @@ public class Verbose{
 				
 				try {
 					sendPacket = new DatagramPacket(sendData, sendData.length,
-							InetAddress.getLocalHost(), 69);
+							InetAddress.getLocalHost(), 23);
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 					System.exit(1);

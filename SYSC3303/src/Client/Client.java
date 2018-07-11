@@ -209,7 +209,7 @@ public class Client{
 	
 	
 	public void request(UI PKG, Send s) throws IOException{
-		//Verbose V = new Verbose();
+		Verbose V = new Verbose();
 
 		mode = PKG.getMode();
 		switch (mode) {
@@ -224,7 +224,7 @@ public class Client{
 
 		case "Verbose":
 			System.out.println("Verbose mode selected.");
-			//V.happy(s, PKG);
+			V.happy(s, PKG);
 			break;	
 
 			/*	case "Test":
