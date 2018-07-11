@@ -27,8 +27,7 @@ public class FileHandler {
 
 		if(!file.contains("\\")) {
 			file = path + "\\" + file;
-		}
-		
+		}	
 		//	Try loading the file
 		try {
 			int count;
@@ -47,7 +46,7 @@ public class FileHandler {
         }catch (IOException e) {
         	e.printStackTrace();
         }
-    
+
 		// return data loaded
 		return fileBuffer;
 	}
@@ -57,12 +56,12 @@ public class FileHandler {
 	 * In: file path or name
 	 * */
 	public byte[] readFile() {
-   
+
 		int count;
 		fileBuffer = new byte[512];
 		
 		try {
-			if ((count = fs.read(fileBuffer)) != -1){		
+			if ((count = fs.read(fileBuffer)) != -1){
 				//	If reached the end of file, size will be reduced
 				if(count < fileBuffer.length) {
 					byte[] tempBuffer = new byte[count];
@@ -85,7 +84,7 @@ public class FileHandler {
 	 * In: file path or name
 	 * */
 	public void prepareWrite(String file) {
-
+    
 		if(!file.contains("\\")) {
 			file = path + "\\" + file;
 		}
@@ -114,7 +113,7 @@ public class FileHandler {
 			os.close();
 		}
 	}
-		
+
 	/*
 	 * Method to prepare write data to a file
 	 * In: file data

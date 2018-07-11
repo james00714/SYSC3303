@@ -1,13 +1,12 @@
 /*
  * RequestParser class to break down the request received
  * */
- 
 package Server;
 
 import java.util.ArrayList;
 
 public class RequestParser {
-  
+
 	private int type, length, blockNum;
 	private byte[] fileData;
 	private String filename;
@@ -51,6 +50,11 @@ public class RequestParser {
 		return new String(data, 2, endFlag);
 	}
 
+	/*
+	 *	Method to parse block number
+	 *	In: request
+	 *	Out: block number
+	 * */
 	private int parseBlockNum(byte[] data) {
 		int left = data[2];
 		int right = data[3];
