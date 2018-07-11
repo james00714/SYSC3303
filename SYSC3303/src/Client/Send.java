@@ -42,7 +42,7 @@ public class Send {
 	public static void RRQ(UI PKG){
 		fileName = PKG.getFileName();
 		byte[] length = fileName.getBytes();
-		read = new byte [3+length.length];
+		read = new byte [2+length.length];
 		read[0] = 0;
 		read[1] = 1;
 		
@@ -51,7 +51,7 @@ public class Send {
 			
 		}
 		
-		read[3+length.length] = 0;
+		read[2+length.length] = 0;
 		
 
 	}
@@ -59,7 +59,7 @@ public class Send {
 	public static void WRQ(UI PKG){
 		fileName = PKG.getFileName();
 		byte[] length = fileName.getBytes();
-		read = new byte [3+length.length];
+		read = new byte [2+length.length];
 		read[0] = 0;
 		read[1] = 2;
 		
@@ -68,7 +68,7 @@ public class Send {
 			
 		}
 		
-		read[3+length.length] = 0;
+		read[2+length.length] = 0;
 
 	}
 
