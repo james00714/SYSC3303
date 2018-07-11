@@ -2,7 +2,7 @@
  * FileHander class to handle requests that need file operation
  * */
 
-package Server;
+package Client;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,7 +14,7 @@ public class FileHandler {
 	private FileInputStream fs;
 	private FileOutputStream os;
 	private File fileToWrite;
-	private String path = System.getProperty("user.dir") + "\\src\\Server";  // default path
+	private String path = System.getProperty("user.dir") + "\\src\\Client";  // default path
 	private byte[] fileBuffer;
 	
 	public FileHandler() {}
@@ -31,7 +31,7 @@ public class FileHandler {
 		//	Try loading the file
 		try {
 			int count;
-			//System.out.println(file);
+			System.out.println(file);
 			fs = new FileInputStream(file);
 			fileBuffer = new byte[512];
             if ((count = fs.read(fileBuffer)) != -1){

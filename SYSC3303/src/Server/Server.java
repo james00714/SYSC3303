@@ -17,7 +17,9 @@ public class Server{
 
 	public void start() throws IOException {
 		myControl = new Controller(port);
-		myControl.listenAndHandle();
+		while(true){
+			myControl.listenAndHandle();
+		}
 	}
 
 	//	Server starts here

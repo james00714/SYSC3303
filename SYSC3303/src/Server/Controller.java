@@ -31,7 +31,7 @@ public class Controller {
 	public void listenAndHandle() throws IOException {
 		
 		//	Construct a DatagramPacket for receiving packets
-		byte data[] = new byte[100];
+		byte data[] = new byte[1024];
 		receivePacket = new DatagramPacket(data, data.length);
 		try {
 			System.out.println("\nServer : Waiting for request...");
@@ -46,7 +46,7 @@ public class Controller {
 		displayReceived(receivePacket);
 
 		//	Parse the request and handle it 
-		RP.parseRequest(data);
+		RP.parseRequest(data, receivePacket.getLength());
 		switch (RP.getType()) {
 			case 1:	handleRead(RP.getFilename());
 					break;
@@ -54,7 +54,7 @@ public class Controller {
 					break;
 			case 3:	handleData(RP.getBlockNum(), RP.getFileData());
 					break;
-			case 4:	handleACK();
+			case 4:	handleACK(RP.getBlockNum());
 					break;
 			case 5:	handleERROR();
 					break;
@@ -69,9 +69,9 @@ public class Controller {
 	 * */
 	public void handleRead(String filename) throws IOException {
 		
-		System.out.print("File Read Requst Received.");
-		System.out.print("Requested File: " + filename);
-		System.out.print("Loading...");
+		System.out.println("File Read Requst Received.");
+		System.out.println("Requested File: " + filename);
+		System.out.println("Loading...");
 		
 		//	Create fileHandler and save file information to it
 		fileHandler = new FileHandler();
@@ -86,8 +86,8 @@ public class Controller {
 	 * */
 	public void handleWrite(String filename) throws IOException {
 		
-		System.out.print("File Write Requst Received.");
-		System.out.print("Prepare Writing File: " + filename);
+		System.out.println("File Write Requst Received.");
+		System.out.println("Prepare Writing File: " + filename);
 		fileHandler = new FileHandler();
 		//	Prepare the file to write
 		fileHandler.prepareWrite(filename);
@@ -103,8 +103,8 @@ public class Controller {
 	 * */
 	public void handleData(int block, byte[] fileData) throws IOException {
 		
-		System.out.print("Data packet received.");
-		System.out.print("New block received, writing...");
+		System.out.println("Data packet received.");
+		System.out.println("New block received, writing...");
 		if(blockNum == block) {		
 			//	Write data to the file, then send the ACK packet
 			fileHandler.writeFile(fileData);
@@ -124,10 +124,14 @@ public class Controller {
 	 * Method to handle ACK request
 	 * In: filename to read
 	 * */
-	public void handleACK() throws IOException {
-		System.out.print("ACK packet Received.");
-		SendDataPacket(fileHandler.readFile(), blockNum);
-		blockNum++;
+	public void handleACK(int block) throws IOException {
+		System.out.println("ACK packet Received.");
+		if(block == this.blockNum){
+			SendDataPacket(fileHandler.readFile(), blockNum);
+			blockNum++;
+		}else{
+			// error
+		}
 	}
 	
 	/*
@@ -140,7 +144,11 @@ public class Controller {
 		//	Create byte array and set head bytes
 		byte[] sendData = new byte[4 + data.length];
 		sendData[0] = 0;
-		sendData[1] = 3;
+		if(data.length == 0){
+			sendData[1] = 4;
+		}else{
+			sendData[1] = 3;
+		}
 		sendData[2] = (byte)(blockNum / 256);
 		sendData[3] = (byte)(blockNum % 256);
 
@@ -167,7 +175,7 @@ public class Controller {
 	}
 
 	public void handleERROR() {
-		System.out.print("ERROR packet Received.");
+		System.out.println("ERROR packet Received.");
 	}
 
 	/*
@@ -188,6 +196,9 @@ public class Controller {
 		System.out.println("Host port: " + receivePacket.getPort());
 		int len = receivePacket.getLength();
 		System.out.println("Length: " + len);
+		for(int i = 0; i < 4; i ++){
+			System.out.println(receivePacket.getData()[i]);
+		}
 		System.out.print("Containing: ");
 		System.out.println(new String(receivePacket.getData(),0,len));
 		System.out.println();	

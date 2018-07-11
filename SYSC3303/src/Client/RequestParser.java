@@ -1,7 +1,7 @@
 /*
  * RequestParser class to break down the request received
  * */
-package Server;
+package Client;
 
 import java.util.ArrayList;
 

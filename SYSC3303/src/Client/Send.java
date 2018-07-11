@@ -1,3 +1,4 @@
+package Client;
 
 public class Send {
 	private static String mode;
@@ -41,8 +42,11 @@ public class Send {
 
 	public static void RRQ(UI PKG){
 		fileName = PKG.getFileName();
+		Client.fileHandler = new FileHandler();
+		Client.fileHandler.prepareWrite(fileName);
+		Client.blockNum = 1;
 		byte[] length = fileName.getBytes();
-		read = new byte [2+length.length];
+		read = new byte [3+length.length];
 		read[0] = 0;
 		read[1] = 1;
 		
@@ -59,7 +63,7 @@ public class Send {
 	public static void WRQ(UI PKG){
 		fileName = PKG.getFileName();
 		byte[] length = fileName.getBytes();
-		read = new byte [2+length.length];
+		read = new byte [3+length.length];
 		read[0] = 0;
 		read[1] = 2;
 		
@@ -78,11 +82,12 @@ public class Send {
 
 	}
 
-	public static void Ack(UI PKG){
+	public static void Ack(int blockNum){
 		int i = 0;
 		ack[0] = 0;
 		ack[1] = 4;
-		ack[2] = (byte) i++;
+		ack[2] = (byte)(blockNum / 256);
+		ack[3] = (byte)(blockNum % 256);
 
 	}
 
@@ -96,12 +101,11 @@ public class Send {
 	
 	
 	
-	
-
+	/*/
 	public static void main(String[] args) {
 		UI PKG = new UI ();
 		request = PKG.getRequest();
-/*
+
 		switch (request){
 		case"RRQ":
 			RRQ(PKG);
@@ -115,8 +119,8 @@ public class Send {
 			ERR(PKG);
 			break;		
 		}
-*/
 
-	}
+
+	}*/
 
 }
