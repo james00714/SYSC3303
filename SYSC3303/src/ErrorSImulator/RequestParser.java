@@ -1,4 +1,4 @@
-package ErrorSImulator;
+package ErrorSimulator;
 
 
 /*
