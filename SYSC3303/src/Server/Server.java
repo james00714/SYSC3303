@@ -19,7 +19,7 @@ public class Server{
 		myControl = new Controller(port);
 		while(true){
 			myControl.listenAndHandle();
-		}
+		}as
 	}
 
 	//	Server starts here
