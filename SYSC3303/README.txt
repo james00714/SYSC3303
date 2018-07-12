@@ -19,7 +19,7 @@ Set Up Instruction:
       6. type "Normal" (please don't type "")
       7. type "WRQ" or "RRQ"
       8. paste the file path or type "testWRQ" (for sending testWRQ.txt file to Server / "testRRQ" for sending testRRQ.txt to Client)
-      9. done :)
+      9. type "quit" to exit the program
 
 
 Description:
