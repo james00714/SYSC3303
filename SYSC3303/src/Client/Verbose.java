@@ -16,6 +16,10 @@ public class Verbose{
 
 	public Verbose()
 	{
+		
+	}
+
+	public void openNormalSocket (){
 		try {			
 			sendReceiveSocket = new DatagramSocket(31);
 		} catch (SocketException se) {  
@@ -24,13 +28,11 @@ public class Verbose{
 		}
 	}
 
-
-
 	public void happy (Send s, UI PKG) throws IOException
 	{
-
+		openNormalSocket();
 		System.out.println("Verbose mode selected");
-
+		
 
 		byte msg[];
 		
@@ -133,8 +135,9 @@ public class Verbose{
 					listenAndHandle(s, msg);
 				
 			}else{
-				
 					fileHandler.close();
+					quit();
+
 				}
 			}else{
 				// error
@@ -185,6 +188,8 @@ public class Verbose{
 					listenAndHandle(s, sendData);	
 				}else {
 					fileHandler.close();
+					quit();
+
 				}
 			}else {
 				//error
@@ -213,10 +218,8 @@ public class Verbose{
 
 		UI PKG = new UI ();
 		Send s = new Send ();
-
-		Verbose V = new Verbose();
-
-
+	//	Verbose V = new Verbose();
+			
 		UI.IT1(c, PKG, s);
 
 	}

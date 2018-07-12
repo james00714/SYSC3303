@@ -14,8 +14,13 @@ public class Client{
 	public static FileHandler fileHandler;
 	public static RequestParser RP;
 
+	
 	public Client()
 	{
+		
+	}
+
+	public void openNormalSocket (){
 		try {			
 			sendReceiveSocket = new DatagramSocket(30);
 		} catch (SocketException se) {  
@@ -23,7 +28,6 @@ public class Client{
 			System.exit(1);
 		}
 	}
-
 
 
 	public void normal (Send s, UI PKG) throws IOException
@@ -135,6 +139,8 @@ public class Client{
 			}else{
 				
 					fileHandler.close();
+					this.sendReceiveSocket.close();
+					
 				}
 			}else{
 				// error
@@ -185,6 +191,8 @@ public class Client{
 					listenAndHandle(s, sendData);	
 				}else {
 					fileHandler.close();
+					this.sendReceiveSocket.close();
+
 				}
 			}else {
 				//error
@@ -209,7 +217,6 @@ public class Client{
 	
 	
 	public void request(UI PKG, Send s) throws IOException{
-		Verbose V = new Verbose();
 
 		mode = PKG.getMode();
 		switch (mode) {
@@ -219,13 +226,15 @@ public class Client{
 			break;*/
 
 		case "Normal":
+			this.openNormalSocket();
 			this.normal(s, PKG);
-			break;
+		
+			//break;
 
 		case "Verbose":
-			System.out.println("Verbose mode selected.");
+			Verbose V = new Verbose();
 			V.happy(s, PKG);
-			break;	
+			//break;	
 
 			/*	case "Test":
 			System.out.println("Test mode selected.");
@@ -236,7 +245,7 @@ public class Client{
 
 	public static void main(String[] args) throws IOException{
 		Client c = new Client();
-
+		
 		UI PKG = new UI ();
 		Send s = new Send ();
 
