@@ -232,8 +232,8 @@ public class Client{
 			//break;
 
 		case "Verbose":
-			Verbose V = new Verbose();
-			V.happy(s, PKG);
+			//Verbose V = new Verbose();
+			//V.happy(s, PKG);
 			//break;	
 
 			/*	case "Test":

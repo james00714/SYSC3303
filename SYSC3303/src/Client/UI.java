@@ -43,7 +43,7 @@ public class UI {
 
 		while (true){
 			System.out.println ("Welcome to this program. This program transfer a file ");
-			System.out.println ("Please select your mode <Normal/Verbose>");		
+			System.out.println ("Please select your mode <Normal>");		
 			mode = sc.next();
 			
 			if (mode.equals("quit")){
