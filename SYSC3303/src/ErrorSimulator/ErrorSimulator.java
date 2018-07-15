@@ -6,7 +6,7 @@ import java.util.*;
 
 //UI
 
-public class ErrorSimulator {
+public class ErrorSimulator{
 
 
 
