@@ -1,98 +1,17 @@
-package Client;
-
-import java.io.*;
+package client;
 import java.net.*;
-import java.util.*;
 
-public class Verbose{
-	private DatagramSocket sendReceiveSocket;
-	private DatagramPacket sendPacket, receivePacket;
-	private static String mode = "";
-	private static String fileName = "";
-	private static String request = "";
-	public static int blockNum;
-	public static FileHandler fileHandler;
-	public static RequestParser RP;
-
-	public Verbose()
-	{
-		
-	}
-
-	public void openNormalSocket (){
-		try {			
-			sendReceiveSocket = new DatagramSocket(31);
-		} catch (SocketException se) {  
-			se.printStackTrace();
-			System.exit(1);
-		}
-	}
-
-	public void happy (Send s, UI PKG) throws IOException
-	{
-		openNormalSocket();
-		System.out.println("Verbose mode selected");
-		
-
-		byte msg[];
-		
-		if (PKG.getRequest().equals ("WRQ")){
-			s.WRQ(PKG);
-			msg = s.getWrite();
-		}else{
-			s.RRQ(PKG);
-			msg = s.getRead();
-		}
+import server.RequestParser;
 
 
+public class Verbose {
+	private RequestParser RP;
 
-		try {
-			sendPacket = new DatagramPacket(msg, msg.length,
-					InetAddress.getLocalHost(), 23);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+	public Verbose() {}
 
-		System.out.println("Client: Sending packet:");
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: ");
-		System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
-
-
-
-		try {
-			sendReceiveSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Client: Packet sent.\n");
-
-
-		
-		listenAndHandle(s, msg);
-		
-		
-		//		sendReceiveSocket.close();
-	}
-	
-	public void listenAndHandle(Send s, byte[] msg) throws IOException{
-		byte data[] = new byte[1024];
-		receivePacket = new DatagramPacket(data, data.length);
-
-		try {
-			sendReceiveSocket.receive(receivePacket);
-		} catch(IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-
+	public void PrintReceiverV (DatagramPacket receivePacket) {
+		RP = new RequestParser();
+		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
 		System.out.println("Client: Packet received:");
 		System.out.println("From host: " + receivePacket.getAddress());
 		System.out.println("Host port: " + receivePacket.getPort());
@@ -100,130 +19,31 @@ public class Verbose{
 		System.out.println("Length: " + len);
 		System.out.print("Containing: ");
 
+		if (RP.getType() == 3 || RP.getType() == 4) {
+			int blockNum = RP.getBlockNum();
+			System.out.println("BlockNumber: " +blockNum);
+		}
 
-		String received = new String(data,0,len);   
+		// Form a String from the byte array.
+		String received = new String(receivePacket.getData(),0,len);   
 		System.out.println(received);
-		
+	}
+
+	public void PrintSender(DatagramPacket sendPacket) {
 		RP = new RequestParser();
-		RP.parseRequest(data, len);
-		if (data[1] == 3) {
-			int block = RP.getBlockNum();
-			/*
-			for(int i = 0;i < data.length; i++){
-				System.out.println(data[i]);
-			}*/
-			if(block == blockNum){
-				fileHandler.writeFile(RP.getFileData());
-				if (len == 516){
-					blockNum++;
-					s.Ack(blockNum);
-					msg = s.getAck();
-					try {
-						sendPacket = new DatagramPacket(msg, msg.length,
-								InetAddress.getLocalHost(), 23);
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-						System.exit(1);
-					}
-					
-					try {
-						sendReceiveSocket.send(sendPacket);
-					} catch (IOException e) {
-						e.printStackTrace();
-						System.exit(1);
-					}
-					listenAndHandle(s, msg);
-				
-			}else{
-					fileHandler.close();
-					quit();
+		RP.parseRequest(sendPacket.getData(), sendPacket.getLength());
+		System.out.println("Client: Sending packet:");
+		System.out.println("To host: " + sendPacket.getAddress());
+		System.out.println("Destination host port: " + sendPacket.getPort());
+		int len = sendPacket.getLength();
+		System.out.println("Length: " + len);
+		System.out.print("Containing: ");
 
-				}
-			}else{
-				// error
-			}
-			
+		if (RP.getType() == 3 || RP.getType() == 4) {
+			int blockNum = RP.getBlockNum();
+			System.out.println("BlockNumber: " +blockNum);
 		}
-		
-		if (data[1] == 4){
-			System.out.println("ACK packet received.");
-			int block = RP.getBlockNum();
-			System.out.println(blockNum);
-			System.out.println(block);
 
-			if (block == blockNum){
-				
-				byte[] fileData = fileHandler.readFile();;
-				System.out.print(fileData.length);
-				byte[] sendData = new byte[4 + fileData.length];
-				sendData[0] = 0;
-				sendData[1] = 3;
-				
-				sendData[2] = (byte)(blockNum / 256);
-				sendData[3] = (byte)(blockNum % 256);
-				//	Save file data to data packet
-				for(int i = 0; i < fileData.length; i++) {
-					sendData[4 + i] = fileData[i];
-				}
-				
-				
-				try {
-					sendPacket = new DatagramPacket(sendData, sendData.length,
-							InetAddress.getLocalHost(), 23);
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-					System.exit(1);
-				}
-				
-				try {
-					sendReceiveSocket.send(sendPacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-					System.exit(1);
-				}
-				
-				
-				if (fileData.length == 512){
-					blockNum++;
-					listenAndHandle(s, sendData);	
-				}else {
-					fileHandler.close();
-					quit();
-
-				}
-			}else {
-				//error
-			}
-		}
-		
+		System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
 	}
-	
-	private int parseBlockNum(byte[] data) {
-		int left = data[2];
-		int right = data[3];
-		if(left < 0) left += 256;
-		if(right < 0) right += 256;
-		return left * 256 + right;
-	}
-
-	public void quit(){
-
-		sendReceiveSocket.close();
-		System.exit(1);
-	}	
-	
-	
-	public static void main(String[] args) throws IOException{
-		Client c = new Client();
-
-		UI PKG = new UI ();
-		Send s = new Send ();
-	//	Verbose V = new Verbose();
-			
-		UI.IT1(c, PKG, s);
-
-	}
-
-
-
 }

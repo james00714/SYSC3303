@@ -1,262 +1,90 @@
-package Client;
+package client;
 
 import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.util.Scanner;
 
-public class Client{
-	private DatagramSocket sendReceiveSocket;
-	private DatagramPacket sendPacket, receivePacket;
-	private static String mode = "";
-	private static String fileName = "";
-	private static String request = "";
-	public static int blockNum;
-	public static FileHandler fileHandler;
-	public static RequestParser RP;
+public class Client {
+	private	String mode, request, fig;
+	private	String fileName;
+	private	boolean running = true;
 
-	
-	public Client()
-	{
-		
+
+	public Client (){}
+
+	public String getMode (){
+		return this.mode;
 	}
 
-	public void openNormalSocket (){
-		try {			
-			sendReceiveSocket = new DatagramSocket(30);
-		} catch (SocketException se) {  
-			se.printStackTrace();
-			System.exit(1);
-		}
+	public String getRequest (){
+		return this.request;
+	}
+
+	public String getFileName (){
+		return this.fileName;
+	}
+
+	public String getFig (){
+		return this.fig;
 	}
 
 
-	public void normal (Send s, UI PKG) throws IOException
-	{
-
-		System.out.println("Normal mode selected");
-
-
-		byte msg[];
-		
-		if (PKG.getRequest().equals ("WRQ")){
-			s.WRQ(PKG);
-			msg = s.getWrite();
-		}else{
-			s.RRQ(PKG);
-			msg = s.getRead();
-		}
-
-
-
-		try {
-			sendPacket = new DatagramPacket(msg, msg.length,
-					InetAddress.getLocalHost(), 69);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Client: Sending packet:");
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: ");
-		System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
-
-
-
-		try {
-			sendReceiveSocket.send(sendPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-		System.out.println("Client: Packet sent.\n");
-
-
-		
-		listenAndHandle(s, msg);
-		
-		
-		//		sendReceiveSocket.close();
-	}
-	
-	public void listenAndHandle(Send s, byte[] msg) throws IOException{
-		byte data[] = new byte[1024];
-		receivePacket = new DatagramPacket(data, data.length);
-
-		try {
-			sendReceiveSocket.receive(receivePacket);
-		} catch(IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-
-
-		System.out.println("Client: Packet received:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
-		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		System.out.print("Containing: ");
-
-
-		String received = new String(data,0,len);   
-		System.out.println(received);
-		
-		RP = new RequestParser();
-		RP.parseRequest(data, len);
-		if (data[1] == 3) {
-			int block = RP.getBlockNum();
-			/*
-			for(int i = 0;i < data.length; i++){
-				System.out.println(data[i]);
-			}*/
-			if(block == blockNum){
-				fileHandler.writeFile(RP.getFileData());
-				if (len == 516){
-					blockNum++;
-					s.Ack(blockNum);
-					msg = s.getAck();
-					try {
-						sendPacket = new DatagramPacket(msg, msg.length,
-								InetAddress.getLocalHost(), 69);
-					} catch (UnknownHostException e) {
-						e.printStackTrace();
-						System.exit(1);
-					}
-					
-					try {
-						sendReceiveSocket.send(sendPacket);
-					} catch (IOException e) {
-						e.printStackTrace();
-						System.exit(1);
-					}
-					listenAndHandle(s, msg);
-				
-			}else{
-				
-					fileHandler.close();
-					this.sendReceiveSocket.close();
-					
-				}
-			}else{
-				// error
-			}
-			
-		}
-		
-		if (data[1] == 4){
-			System.out.println("ACK packet received.");
-			int block = RP.getBlockNum();
-			System.out.println(blockNum);
-			System.out.println(block);
-
-			if (block == blockNum){
-				
-				byte[] fileData = fileHandler.readFile();;
-				System.out.print(fileData.length);
-				byte[] sendData = new byte[4 + fileData.length];
-				sendData[0] = 0;
-				sendData[1] = 3;
-				
-				sendData[2] = (byte)(blockNum / 256);
-				sendData[3] = (byte)(blockNum % 256);
-				//	Save file data to data packet
-				for(int i = 0; i < fileData.length; i++) {
-					sendData[4 + i] = fileData[i];
-				}
-				
-				
-				try {
-					sendPacket = new DatagramPacket(sendData, sendData.length,
-							InetAddress.getLocalHost(), 69);
-				} catch (UnknownHostException e) {
-					e.printStackTrace();
-					System.exit(1);
-				}
-				
-				try {
-					sendReceiveSocket.send(sendPacket);
-				} catch (IOException e) {
-					e.printStackTrace();
-					System.exit(1);
-				}
-				
-				
-				if (fileData.length == 512){
-					blockNum++;
-					listenAndHandle(s, sendData);	
+	public void menu (){
+		Scanner sc = new Scanner(System.in);
+		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
+		System.out.println("Please select your mode:");
+		System.out.println("1. Normal  <Client, Server>");
+		System.out.println("2. Test  <Client, Error Simulator, Server>");
+		mode = sc.next();
+		if (!mode.equals("quit")) {
+			System.out.println("Please select your request");
+			System.out.println("1. RRQ <Read Request>");
+			System.out.println("2. WRQ <Write Request>");
+			request = sc.next();
+			if (!request.equals("quit")) {
+				System.out.println("Please enter your file Name ");
+				fileName = sc.next();
+				if(!fileName.equals("quit")) {
+					System.out.println("Please enter your mode for data");
+					System.out.println("1. Verbose");
+					System.out.println("2. Quiet");
+					fig = sc.next();		
 				}else {
-					fileHandler.close();
-					this.sendReceiveSocket.close();
-
+					sc.close();
 				}
 			}else {
-				//error
+				sc.close();
 			}
-		}
-		
-	}
-	
-	private int parseBlockNum(byte[] data) {
-		int left = data[2];
-		int right = data[3];
-		if(left < 0) left += 256;
-		if(right < 0) right += 256;
-		return left * 256 + right;
-	}
-
-	public void quit(){
-
-		sendReceiveSocket.close();
-		System.exit(1);
-	}	
-	
-	
-	public void request(UI PKG, Send s) throws IOException{
-
-		mode = PKG.getMode();
-		switch (mode) {
-		/*		case "Quiet":
-			System.out.println("Quiet mode selected.");
-			Q.happy(PKG);
-			break;*/
-
-		case "Normal":
-			this.openNormalSocket();
-			this.normal(s, PKG);
-		
-			//break;
-
-		case "Verbose":
-			//Verbose V = new Verbose();
-			//V.happy(s, PKG);
-			//break;	
-
-			/*	case "Test":
-			System.out.println("Test mode selected.");
-			T.happy(PKG);
-			break;	*/
+		}else {
+			sc.close();
 		}
 	}
 
-	public static void main(String[] args) throws IOException{
+	public void start (Sender s) throws IOException{
+
+		if (mode.equals("quit") || request.equals("quit") || fileName.equals("quit") || fig.equals("quit")) {
+			running = false;
+			System.out.println("Thank your for using our program. Goodbye!");
+			s.Close();
+			//t.close();	
+		}else {
+			if (mode.equals("1")){
+				s.start(this, s, 69);
+				s.Receiver();
+			}else if(mode.equals("2")){
+				s.start(this, s, 23);
+				s.Receiver();	
+			}else {
+				System.out.println("Invalid mode input, please try again.");
+			}
+		}	
+	}
+
+	public static void main(String[] args) throws IOException {
 		Client c = new Client();
-		
-		UI PKG = new UI ();
-		Send s = new Send ();
-
-		//		Quiet Q = new Quiet();
-		//	Test T = new Test();
-
-
-		UI.IT1(c, PKG, s);
-
+		Sender n = new Sender (c);
+		while(c.running) {
+			c.menu();
+			c.start(n);	
+		}		
 	}
-
-
-
 }

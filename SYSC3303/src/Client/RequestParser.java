@@ -1,7 +1,7 @@
 /*
  * RequestParser class to break down the request received
  * */
-package Client;
+package client;
 
 import java.util.ArrayList;
 
@@ -30,7 +30,7 @@ public class RequestParser {
 				positionOf0.add(i);
 			}
 		}
-		if(type == 1 || type == 2) {
+		if(type == 2 || type == 1) {
 			filename = parseFilename(data, positionOf0.get(1) - 2);
 		}else if(type == 3 || type == 4) {
 			blockNum = parseBlockNum(data);

@@ -2,7 +2,7 @@
  * FileHander class to handle requests that need file operation
  * */
 
-package Client;
+package client;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,54 +14,29 @@ public class FileHandler {
 	private FileInputStream fs;
 	private FileOutputStream os;
 	private File fileToWrite;
-	private String path = System.getProperty("user.dir") + "\\src\\Client";  // default path
+	private String path = System.getProperty("user.dir") + "\\src\\client";  // default path
 	private byte[] fileBuffer;
 	
 	public FileHandler() {}
 	
-	public void openStream(String file){
-		if(!file.contains("\\")) {
-			file = path + "\\" + file;
-		}	
-		//	Try loading the file
-		try {
-			fs = new FileInputStream(file);
-			fileBuffer = new byte[512];
-        }catch (IOException e) {
-        	e.printStackTrace();
-        }
-	}
 	/*
 	 * Method to handle read request
 	 * In: file path or name
 	 * */
-	public byte[] readFile(String file) throws IOException {
+	public void readFile(String file) throws IOException {
 
 		if(!file.contains("\\")) {
 			file = path + "\\" + file;
 		}	
 		//	Try loading the file
 		try {
-			int count;
-			System.out.println(file);
+			//System.out.println(file);
 			fs = new FileInputStream(file);
-			fileBuffer = new byte[512];
-            if ((count = fs.read(fileBuffer)) != -1){
-            	//	If reached the end of file, size will be reduced
-            	if(count < fileBuffer.length) {
-            		byte[] tempBuffer = new byte[count];
-            		for(int i = 0; i < count; i++) {
-            			tempBuffer[i] = fileBuffer[i];
-            		}
-            		fileBuffer = tempBuffer;
-            	}
-            }
+            
         }catch (IOException e) {
         	e.printStackTrace();
         }
 
-		// return data loaded
-		return fileBuffer;
 	}
 	
 	/*
@@ -97,10 +72,21 @@ public class FileHandler {
 	 * In: file path or name
 	 * */
 	public void prepareWrite(String file) {
-    
-		if(!file.contains("\\")) {
-			file = path + "\\" + file;
+		/*
+		if(file.contains("\\")) {
+			
+			 int index = 0;
+			for(int i = 0; i < file.length(); i++){
+				if(file.charAt(i) == '\\'){
+					index = i;
+				}
+			}
+			file = file.substring(index, file.length());
+			 
+			
 		}
+		*/
+		file = path + "\\" + file;
 		try{
 			fileToWrite = new File(file);
 			// create if does not exists
