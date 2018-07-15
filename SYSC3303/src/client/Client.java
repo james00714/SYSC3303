@@ -1,90 +1,52 @@
-package client;
+/*
+ * Client class to store information of a valid connection
+ * */
 
-import java.io.*;
-import java.util.Scanner;
+package server;
+
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
 
 public class Client {
-	private	String mode, request, fig;
-	private	String fileName;
-	private	boolean running = true;
-
-
-	public Client (){}
-
-	public String getMode (){
-		return this.mode;
+	
+	private InetAddress myAddress;
+	private int myPort, myBlockNum;
+	private FileHandler myFH;
+	
+	//	Construct with connect information
+	public Client(DatagramPacket receivePacket, int blockNum, FileHandler FH) {
+		myAddress = receivePacket.getAddress();
+		myPort = receivePacket.getPort();
+		myBlockNum = blockNum;
+		myFH = FH;
 	}
-
-	public String getRequest (){
-		return this.request;
+	
+	/*
+	 * Public information getters
+	 * */
+	public InetAddress getAddress() {
+		return myAddress;
 	}
-
-	public String getFileName (){
-		return this.fileName;
+	
+	public int getPort() {
+		return myPort;
 	}
-
-	public String getFig (){
-		return this.fig;
+	
+	public int getBlockNum() {
+		return myBlockNum;
 	}
-
-
-	public void menu (){
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
-		System.out.println("Please select your mode:");
-		System.out.println("1. Normal  <Client, Server>");
-		System.out.println("2. Test  <Client, Error Simulator, Server>");
-		mode = sc.next();
-		if (!mode.equals("quit")) {
-			System.out.println("Please select your request");
-			System.out.println("1. RRQ <Read Request>");
-			System.out.println("2. WRQ <Write Request>");
-			request = sc.next();
-			if (!request.equals("quit")) {
-				System.out.println("Please enter your file Name ");
-				fileName = sc.next();
-				if(!fileName.equals("quit")) {
-					System.out.println("Please enter your mode for data");
-					System.out.println("1. Verbose");
-					System.out.println("2. Quiet");
-					fig = sc.next();		
-				}else {
-					sc.close();
-				}
-			}else {
-				sc.close();
-			}
-		}else {
-			sc.close();
-		}
+	
+	public void incrementBlockNum() {
+		myBlockNum++;
 	}
-
-	public void start (Sender s) throws IOException{
-
-		if (mode.equals("quit") || request.equals("quit") || fileName.equals("quit") || fig.equals("quit")) {
-			running = false;
-			System.out.println("Thank your for using our program. Goodbye!");
-			s.Close();
-			//t.close();	
-		}else {
-			if (mode.equals("1")){
-				s.start(this, s, 69);
-				s.Receiver();
-			}else if(mode.equals("2")){
-				s.start(this, s, 23);
-				s.Receiver();	
-			}else {
-				System.out.println("Invalid mode input, please try again.");
-			}
-		}	
+	
+	public FileHandler getFileHandler() {
+		return myFH;
 	}
-
-	public static void main(String[] args) throws IOException {
-		Client c = new Client();
-		Sender n = new Sender (c);
-		while(c.running) {
-			c.menu();
-			c.start(n);	
-		}		
+	
+	//	Cleaner
+	public void remove() throws IOException {
+		myFH.close();
 	}
 }
