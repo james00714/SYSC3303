@@ -9,55 +9,38 @@ public class ESThreadNormal implements Runnable{
 	
 	private DatagramPacket receivePacket, sendPacket;
 	
-	private int tID;
+	private int currPort = 2000; // should be 23
+	
 	private int clientPort;
+	private int counter = 0;
 	//private InetAddress clientAddress;
 	
 	
-	public ESThreadNormal(int tID, DatagramPacket clientPacket) {
+	public ESThreadNormal(DatagramSocket socket, DatagramPacket received) {
 		
-		this.tID = tID;
-		this.receivePacket = clientPacket;
-		this.clientPort = receivePacket.getPort();
-		//this.clientAddress = receivePacket.getAddress();
+		this.receivePacket = received;
+		this.sendReceiveSocket = socket;
 		
-		Thread t = new Thread(this, Integer.toString(this.tID));
+		Thread t = new Thread(this, Integer.toString(counter++));
 		
 		t.start();
 	}
 	
 	public void run() {
 		
-		
-		try {
-			
-			sendReceiveSocket = new DatagramSocket(tID);
-			
-		}catch(SocketException se) {
-			
-			se.printStackTrace();
-		    System.exit(1);
-		}
-		
-		receiveFromServer();
-		
 		while(true) { // need to change the stop condition
 			receiveFromClient();
 			receiveFromServer();
 		}
+		
 	}
 	
 	private void receiveFromClient() {
 		
-		
-		byte data[] = new byte[1024];
-		
-		receivePacket = new DatagramPacket(data, data.length);
-		
-		System.out.println("Error Simulator: Waiting for Packet from client.\n");
-
-		
 		// Block until a datagram packet is received from receiveSocket.
+		
+		if(receivePacket.getData() == null) {
+			System.out.println("Error Simulator: Waiting for Packet from client.\n");
 		
 		try {
 
@@ -72,23 +55,26 @@ public class ESThreadNormal implements Runnable{
 		       sendReceiveSocket.close();
 		       System.exit(1);
 		    }
+		}
 		
 		// Process the received datagram.
 		
 		System.out.println("Error Simulator: Packet received from client:");
 	    System.out.println("From host: " + receivePacket.getAddress());
 	    System.out.println("host port: " + receivePacket.getPort());
+	    
+	    clientPort = receivePacket.getPort();
 
 	    int len = receivePacket.getLength();
 	    System.out.println("Length: " + len);
 	    printMessage(receivePacket.getData(), len);
 		
-	    
 	    // sendPacket, send to server
+		
 	    
 	    try {
 	    	
-	    	sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), 69); 
+	    	sendPacket = new DatagramPacket(receivePacket.getData(), receivePacket.getLength(), receivePacket.getAddress(), clientPort);  //should be 69
 		    sendReceiveSocket.send(sendPacket);
 		    
 	    }catch(IOException e) {
@@ -182,27 +168,27 @@ public class ESThreadNormal implements Runnable{
 		    if(rp.getType()==1) {
 
 		    	System.out.println("***Parse Read Request***");
-		    	System.out.print("Containing: " );
-		    	System.out.print("filename: " + rp.getFilename());
+		    	System.out.println("Containing: " );
+		    	System.out.println("filename: " + rp.getFilename());
 
 		    }else if(rp.getType()==2) {
 
 		    	System.out.println("***Parse Write Request***");
-		    	System.out.print("Containing: " );
+		    	System.out.println("Containing: " );
 		    	System.out.println("filename: " + rp.getFilename());
 
 		    }else if(rp.getType()==3) {
 
 		    	System.out.println("***Parse Data***");
-		    	System.out.print("Containing: ");
+		    	System.out.println("Containing: ");
 		    	System.out.println(rp.getBlockNum());
 		    	System.out.println(rp.getFileData().toString());
 
 		    }else if(rp.getType()==4) {
 
 		    	System.out.println("***Parse ACK***");
-		    	System.out.print("Containing: ");
-		    	System.out.print(rp.getBlockNum());
+		    	System.out.println("Containing: ");
+		    	System.out.println(rp.getBlockNum());
 
 		    }
 
