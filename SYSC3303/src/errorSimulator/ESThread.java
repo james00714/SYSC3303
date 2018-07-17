@@ -4,43 +4,43 @@ import java.io.*;
 import java.net.*;
 
 public class ESThread extends Thread{
-	
+
 	private DatagramSocket sendReceiveSocket;	
 	private DatagramPacket receiveServerPacket, receiveClientPacket, sendPacket;
-	
+
 	private InetAddress clientAddr; //serverAddr; for multi-pc
 	private int clientPort, serverPort;
-	
+
 	public ESThread(DatagramPacket received) {
-		
+
 		byte[] data1 = new byte[1024];
 		byte[] data2 = new byte[1024];
-		
+
 		receiveServerPacket = new DatagramPacket(data1, data1.length);
 		receiveClientPacket = new DatagramPacket(data2, data2.length);
-		
+
 		clientAddr = received.getAddress();
 		clientPort = received.getPort();
 		//serverAddr = null;
 		serverPort = -1;
-		
+
 		this.receiveClientPacket = received;
-		
+
 		try{
 			sendReceiveSocket = new DatagramSocket();
 		}catch (SocketException se){
 			se.printStackTrace();
 			System.exit(1);
 		}
-	
+
 	}
-	
+
 	public void run() {
-		
+
 		receiveFromClient();
-		
+
 	}
-	
+
 	public byte[] Modify(DatagramPacket packet, RequestParser RP, UI ui) {
 		int choice = ui.mainMenu();
 		byte[] sendData = null;
@@ -58,15 +58,77 @@ public class ESThread extends Thread{
 			}
 			sendData[1] = (byte) newOp;
 			//send(sendData, port);		
+		}else if(choice == 2) {
+			int second = ui.type2();
+			if (second == 1) {
+				byte [] fileName = ui.askFileName();
+				sendData = new byte[4 + fileName.length];
+				sendData[0] = 0;
+				sendData[1] = 1;
+				for (int i = 0; i < fileName.length; i++) {
+					sendData[2+i] = fileName[i];
+				}
+				sendData[3+fileName.length] = 0;
+
+			}else if (second == 2) {
+				sendData = new byte[packet.getLength()];
+				for(int i = 0; i < packet.getLength();i++) {
+					sendData[i] = packet.getData()[i];
+				}
+				int Bk = ui.askBkNumber();
+				sendData[2] = (byte) (Bk / 256);
+				sendData[3] = (byte) (Bk % 256);
+
+			}else if (second == 3) {
+				sendData = new byte[packet.getLength()];
+				for(int i = 0; i < packet.getLength();i++) {
+					sendData[i] = packet.getData()[i];
+				}
+				int code = ui.askErrCode();
+				sendData[1] = (byte) code;
+			}else {
+				System.out.println("Choice 2 Error.");
+			}
+
+		}else if(choice == 3) {
+			int third = ui.type3();
+			if (third == 1) {
+				byte [] data = ui.askData();
+				sendData = new byte[4+data.length];
+				for(int i = 0; i < 4;i++) {
+					sendData[i] = packet.getData()[i];
+				}
+				
+				for (int j = 0; j < data.length; j++) {
+					sendData[4 + j] = data[j];
+				}
+				
+			}else if (third == 2) {
+				byte [] msg = ui.askErrMSG();
+				sendData = new byte[4+msg.length];
+				for(int i = 0; i < 4 ;i++) {
+					sendData[i] = packet.getData()[i];
+				}
+				
+				for (int j = 0; j < msg.length; j++) {
+					sendData[4+j] = msg[j];
+				}
+					sendData[4+msg.length] = 0;
+			}else {
+				System.out.println("Choice 3 Error");
+			}
+		}else {
+			System.out.println("Error");
 		}
+
 		return sendData;
 	}
-	
+
 	public void send(byte[] data, InetAddress addr, int port) {
-				
+
 		sendPacket = new DatagramPacket(data, data.length,
-					addr, port);
-		
+				addr, port);
+
 		try {
 			sendReceiveSocket.send(sendPacket);
 		} catch (IOException e) {
@@ -76,7 +138,7 @@ public class ESThread extends Thread{
 
 		displaySend(sendPacket);	
 	}
-	
+
 	public void receiveFromClient() {
 		if(receiveClientPacket == null) {
 			byte data[] = new byte[1024];
@@ -95,7 +157,7 @@ public class ESThread extends Thread{
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		if(serverPort == -1) {
-			send(Modify(receiveClientPacket, RP, myUI),clientAddr, 69);
+			send(Modify(receiveClientPacket, RP, myUI),clientAddr, 5000);
 		}else {
 			send(Modify(receiveClientPacket, RP, myUI),clientAddr, serverPort);
 		}
@@ -103,7 +165,7 @@ public class ESThread extends Thread{
 		////////////////////////////////////////////////////////
 		receiveFromServer();
 	}
-	
+
 	public void receiveFromServer() {
 		try {
 			System.out.println("ES: Waiting for server response...");
@@ -123,7 +185,7 @@ public class ESThread extends Thread{
 		receiveClientPacket = null;
 		receiveFromClient();
 	}
-	
+
 	public void displaySend(DatagramPacket sendPacket) {
 		System.out.println("ES : Sending packet:");
 		System.out.println("To host: " + sendPacket.getAddress());
@@ -131,5 +193,5 @@ public class ESThread extends Thread{
 		int len = sendPacket.getLength();
 		System.out.println("Length: " + len);
 	}
-	
+
 }

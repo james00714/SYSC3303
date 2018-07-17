@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class Server{
 	
-	private final int port = 69;  // Port number
+	private final int port = 5000;  // Port number
 	private Listener myListener;
 	
 	public Server(){}
