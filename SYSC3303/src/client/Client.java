@@ -1,3 +1,6 @@
+/*
+ *SYSC3303 Project G11 Client
+*/
 package client;
 
 import java.io.*;
@@ -27,7 +30,9 @@ public class Client {
 		return this.fig;
 	}
 
-
+	/*
+	 * Method for the UI
+	*/
 	public void menu (){
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
@@ -59,6 +64,9 @@ public class Client {
 		}
 	}
 
+	/*
+	 * Open Normal/Test mode depends on the user input in UI
+	*/
 	public void start (Sender s) throws IOException{
 
 		if (mode.equals("quit") || request.equals("quit") || fileName.equals("quit") || fig.equals("quit")) {
@@ -79,6 +87,9 @@ public class Client {
 		}	
 	}
 
+	/*
+	 * Client Starts
+	*/
 	public static void main(String[] args) throws IOException {
 		Client c = new Client();
 		Sender n = new Sender (c);
