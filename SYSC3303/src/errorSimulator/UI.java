@@ -3,18 +3,22 @@ package errorSimulator;
 import java.util.Scanner;
 
 public class UI {
-	
+
 	RequestParser RP;
 	String cmd;
+
 	Scanner in;
-	
+
 	public UI(RequestParser RP) {
 		this.RP = RP;
 		in = new Scanner(System.in);
 	}
 
+
+
+
 	public int mainMenu() {
-		
+
 		int index = 3, num = 0;
 		System.out.println("-------------------New Packet Received------------------");
 		int type = RP.getType();
@@ -67,11 +71,41 @@ public class UI {
 			}else {
 				break;
 			}
-			
+
 		}
 		return num;
 	}
-	
+
+	public int type2 () {
+		int second = -1, type = RP.getType();
+		if (type == 1 || type ==2) {
+			second = 1;
+		}else if (type == 3 || type ==4) {
+			second = 2;
+		}else if (type == 5) {
+			second = 3;
+		}else {
+			System.out.println("Error.");
+		}
+
+		return second; 
+	}
+
+
+	public int type3() {
+		int third = -1, type = RP.getType();
+		if (type == 3) {
+			third = 1;
+		}else if (type == 5) {
+			third = 2;
+		}else {
+			System.out.println("Error");
+		}
+		
+		return third;
+	}
+
+
 	public int askOpCode() {
 		int num = -1;
 		System.out.println("Please enter new Opcode: ");
@@ -85,8 +119,70 @@ public class UI {
 				cmd = in.next();
 				continue;
 			}
-			
+
 		}
 	}
 
+	public byte [] askFileName() {
+		String newName = "";
+		System.out.println("Please enter new Filename");
+		newName = in.next();
+		byte [] fileName = newName.getBytes();
+		return fileName;
+	}
+
+	public int askBkNumber() {
+		int Bk = -1;
+		System.out.println("Please enter new Block number");
+		cmd = in.next();
+		while(true) {
+			try {
+				Bk = Integer.parseInt(cmd);
+				if (Bk >= 0 && Bk <= 65535) {
+					return Bk;
+				}
+			}catch (NumberFormatException e) {
+				System.out.println("\t\nInvalid input, please try again.");
+				cmd = in.next();
+				continue;
+			}
+		}
+	}
+
+	public int askErrCode() {
+		int code = -1;
+		System.out.println("Please enter new Error code");
+		cmd = in.next();
+		while(true) {
+			try {
+				code = Integer.parseInt(cmd);
+				if (code >= 0 && code <= 7) {
+					return code;
+				}
+			}catch (NumberFormatException e) {
+				System.out.println("\t\nInvalid input, please try again.");
+				cmd = in.next();
+				continue;
+			}
+		}
+	}
+	
+	
+	public byte [] askData() {
+		String newData = "";
+		System.out.println("Please enter new Data");
+		newData = in.next();
+		byte [] data = newData.getBytes();
+		return data;
+	}
+
+	
+
+	public byte [] askErrMSG() {
+		String message = "";
+		System.out.println("Please enter new Error message");
+		message = in.next();
+		byte [] MSG = message.getBytes();
+		return MSG;
+	}
 }

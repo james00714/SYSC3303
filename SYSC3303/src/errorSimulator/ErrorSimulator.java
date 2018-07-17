@@ -11,7 +11,7 @@ public class ErrorSimulator{
 	public void start() {
 	
 		try{
-			sendReceiveSocket = new DatagramSocket(23);
+			sendReceiveSocket = new DatagramSocket(3000);
 		}catch (SocketException se){
 			se.printStackTrace();
 			System.exit(1);
