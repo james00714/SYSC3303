@@ -157,7 +157,7 @@ public class ESThread extends Thread{
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		if(serverPort == -1) {
-			send(Modify(receiveClientPacket, RP, myUI),clientAddr, 5000);
+			send(Modify(receiveClientPacket, RP, myUI),clientAddr, 69);
 		}else {
 			send(Modify(receiveClientPacket, RP, myUI),clientAddr, serverPort);
 		}
