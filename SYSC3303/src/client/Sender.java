@@ -116,7 +116,9 @@ public class Sender {
 	}
 
 	public void ERR (){
-		System.out.println("Received error packet.");
+		System.out.println("Received Error Packet.");
+		System.out.println("Error code: " + RP.getErrorCode());
+		System.out.println("Error Message: " + RP.getErrorMsg());
 	}
 
 	public void SendPacket(byte [] packet) {
