@@ -1,3 +1,6 @@
+/*
+ * SYSC3303 Project G11 Error Simulator
+*/
 package errorSimulator;
 
 import java.net.*;
@@ -8,6 +11,9 @@ public class ErrorSimulator{
 	DatagramPacket receivedPacket;
 	DatagramSocket sendReceiveSocket;
 	
+	/*
+	 * Start the socket
+	*/
 	public void start() {
 	
 		try{
@@ -54,6 +60,9 @@ public class ErrorSimulator{
 		EST.start(); 
 	}
 	
+	/*
+	 * Error simulator starts here
+	*/
 	public static void main(String args[]) throws IOException{
 		
 		ErrorSimulator i = new ErrorSimulator();
