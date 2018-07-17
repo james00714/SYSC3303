@@ -46,7 +46,7 @@ public class Client {
 	}
 	
 	//	Cleaner
-	public void remove() throws IOException {
+	public void close() throws IOException {
 		myFH.close();
 	}
 }

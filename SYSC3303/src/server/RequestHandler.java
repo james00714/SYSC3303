@@ -9,32 +9,52 @@ package server;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.SocketException;
 
 public class RequestHandler extends Thread{
 	
 	RequestParser RP;
 	DatagramPacket myPacket, sendPacket;
-	DatagramSocket sendSocket;
-	int length;
-	ClientManager myClientManager;
+	DatagramSocket sendReceiveSocket;
+	int length, finalBlock;
+	Client myClient;
 	
 	/*
 	 * Construct handler with packet information
 	 * */
-	public RequestHandler(DatagramPacket receivePacket, ClientManager clientManager, DatagramSocket socket) throws IOException {
+	public RequestHandler(DatagramPacket receivePacket) throws IOException {
 		
+		myClient = null;
 		myPacket = receivePacket;
-		sendSocket = socket;
-		myClientManager = clientManager;
-		length = receivePacket.getLength();
-		RP = new RequestParser();
-		RP.parseRequest(receivePacket.getData(), length);
+		
+		try{
+			sendReceiveSocket = new DatagramSocket();
+		}catch (SocketException se){
+			se.printStackTrace();
+			System.exit(1);
+		}
+		
+		System.out.println("New Connection Established");
+		
 	}
 	
 	/*
 	 * New thread handling request from client starts here
 	 * */
 	public void run() {
+		
+		handleRequest();
+	}
+	
+	/*
+	 * Method to handle all requests
+	 * */
+	public void handleRequest() {
+		
+		RP = new RequestParser();
+		length = myPacket.getLength();
+		RP.parseRequest(myPacket.getData(), length);
+		
 		try{
 			switch (RP.getType()) {
 				case 1:	handleRead(RP.getFilename());
@@ -51,7 +71,7 @@ public class RequestHandler extends Thread{
 		}catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
-		}   
+		}  
 	}
 	
 	/*
@@ -62,18 +82,22 @@ public class RequestHandler extends Thread{
 		
 		System.out.println("File Read Requst Received.");
 		System.out.println("Requested File: " + filename);
-		System.out.println("Loading...");
-		
-		if(myClientManager.getClientByPacket(myPacket) == null) {
-			//	Create fileHandler and save file information to it
-			Client newClient = new Client(myPacket, 1, new FileHandler());
-			myClientManager.addClient(newClient);
-			byte[] filedata = newClient.getFileHandler().readFile(filename);
-			SendDataPacket(filedata, newClient.getBlockNum());
+			
+		if(myClient == null) {
+			//	Save client information and send first piece of data
+			myClient = new Client(myPacket, 1, new FileHandler());
+			finalBlock = -1;
+			byte[] filedata = myClient.getFileHandler().readFile(filename);
+			System.out.println("Loading File...");
+			if(filedata.length < 512) {
+				finalBlock = myClient.getBlockNum();
+			}
+			SendDataPacket(filedata, myClient.getBlockNum());
+			receiveFromClient();
 		}else {
-			//	Error
-			//	Current client does not finish transfer yet
-		}	
+			//	ERROR WRQ RRQ not finished yet
+			System.out.println("ERROR: WRQ RRQ not finished yet");
+		}
 	}
 
 	/*
@@ -84,17 +108,16 @@ public class RequestHandler extends Thread{
 		
 		System.out.println("File Write Requst Received.");
 		
-		if(myClientManager.getClientByPacket(myPacket) == null) {
-			System.out.println("Prepare Writing File: " + filename);
-			//	Create Client and save information into it
-			Client newClient = new Client(myPacket, 1, new FileHandler());
-			newClient.getFileHandler().prepareWrite(filename);
-			myClientManager.addClient(newClient);
-			SendDataPacket(new byte[0], newClient.getBlockNum() - 1);
+		//	Create Client and save information into it
+		if(myClient == null) {
+			myClient = new Client(myPacket, 1, new FileHandler());
+			myClient.getFileHandler().prepareWrite(filename);
+			SendDataPacket(new byte[0], myClient.getBlockNum() - 1);
+			receiveFromClient();
 		}else {
-			//	Error
-			//	Current client does not finish transfer yet
-		}	
+			//	ERROR WRQ RRQ not finished yet
+			System.out.println("ERROR: WRQ RRQ not finished yet");
+		}
 	}
 	
 	/*
@@ -103,20 +126,21 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleData(int block, byte[] fileData) throws IOException {
 		
-		System.out.println("Data packet received.");
+		System.out.println("Data Packet Received.");
 				
-		Client c = myClientManager.getClientByPacket(myPacket);
-		if(c != null) {
-			if(block == c.getBlockNum()){
-				System.out.println("New block received, writing...");
-				c.getFileHandler().writeFile(fileData);
+		if(myClient != null) {
+			if(block == myClient.getBlockNum()){
+				System.out.println("New Block Received, Writing...");
+				myClient.getFileHandler().writeFile(fileData);
+				myClient.incrementBlockNum();			
+				SendDataPacket(new byte[0], myClient.getBlockNum() - 1);
 				if(myPacket.getLength() < 516) {
 					//	Reached the end of file
-					myClientManager.removeClient(myPacket);
+					System.out.println("Transfer Complete");
+					myClient.close();
 				}else {
-					c.incrementBlockNum();
+					receiveFromClient();
 				}
-				SendDataPacket(new byte[0], c.getBlockNum() - 1);
 			}else{
 				System.out.println("ERROR: Wrong package received.");
 				//	Error
@@ -134,12 +158,26 @@ public class RequestHandler extends Thread{
 	 * In: filename to read
 	 * */
 	public void handleACK(int block) throws IOException {
-		System.out.println("ACK packet Received.");
-		Client c = myClientManager.getClientByPacket(myPacket);
-		if(c != null) {
-			if(block == c.getBlockNum()){
-				c.incrementBlockNum();
-				SendDataPacket(c.getFileHandler().readFile(), c.getBlockNum());
+		
+		System.out.println("ACK Packet Received.");
+		
+		if(myClient != null) {
+			if(block == myClient.getBlockNum()){		
+				myClient.incrementBlockNum();
+				if(finalBlock == block) {
+					//	Client has received the last block
+					//	End thread
+					System.out.println("Transfer Complete");
+					myClient.close();
+				}else {
+					byte[] fileData = myClient.getFileHandler().readFile();
+					if(fileData.length < 512) {
+						finalBlock = myClient.getBlockNum();
+					}
+					SendDataPacket(fileData, myClient.getBlockNum());
+					receiveFromClient();
+				}
+							
 			}else{
 				System.out.println("ERROR: Wrong package received.");
 				//	Error
@@ -176,21 +214,13 @@ public class RequestHandler extends Thread{
 		}
 		sendPacket = new DatagramPacket(sendData, sendData.length,
 				myPacket.getAddress(), myPacket.getPort());
-
 		//	Send packet
 		try {
 			// displaySend(sendPacket);
-			sendSocket.send(sendPacket);
+			sendReceiveSocket.send(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
-		}
-
-		//	Close fileHandler if reached the end
-		if(data.length != 0){
-			if(data.length < 512) {
-				myClientManager.removeClient(myPacket);
-			}
 		}
 	}
 	
@@ -217,13 +247,24 @@ public class RequestHandler extends Thread{
 		//	Send packet
 		try {
 			// displaySend(sendPacket);
-			sendSocket.send(sendPacket);
+			sendReceiveSocket.send(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 	}
-
+	
+	public void receiveFromClient() {
+		try {
+			sendReceiveSocket.receive(myPacket);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		handleRequest();
+	}
+	
 	public void handleERROR(int code, String msg) {
 		System.out.println("ERROR packet Received.");
 	}

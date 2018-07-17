@@ -1,9 +1,6 @@
 package client;
 import java.net.*;
 
-import server.RequestParser;
-
-
 public class Verbose {
 	private RequestParser RP;
 
