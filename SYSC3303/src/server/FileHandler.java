@@ -82,7 +82,7 @@ public class FileHandler {
 	 * */
 	public void prepareWrite(String file) {
 
-		System.out.println("Preparing writing file...");
+		System.out.println("Prepare Writing File: " + file);
 		
 		if(file.contains("\\")) {
 			int index = 0;

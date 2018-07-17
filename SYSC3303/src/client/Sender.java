@@ -9,7 +9,7 @@ public class Sender {
 	private DatagramPacket receivePacket, sendPacket;
 	private FileHandler fileHandler;
 	private RequestParser RP;
-	private int blockNumber = 0, port;
+	private int blockNumber = 0, port, finalBlock;
 
 	public Sender(Client c){
 		this.c = c;
@@ -20,14 +20,6 @@ public class Sender {
 			se.printStackTrace();
 			System.exit(1);
 		}
-	}
-
-	public DatagramPacket getReceivePacket() {
-		return this.receivePacket;
-	}
-
-	public DatagramPacket getSendPacket() {
-		return this.sendPacket;
 	}
 
 	public void Receiver () throws IOException{
@@ -42,6 +34,7 @@ public class Sender {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		
 		PrintReceiver(receivePacket);
 		ReceiveHandler(receivePacket);
 
@@ -68,16 +61,16 @@ public class Sender {
 
 		if (blockNum == blockNumber){
 			fileHandler.writeFile(RP.getFileData());
+			send[0] = 0;
+			send[1] = 4;
+			send[2] = (byte)(blockNumber/256);
+			send[3] = (byte)(blockNumber%256);
+			SendPacket (send);
+			blockNumber++;	
 			if (length == 516){			
-				send[0] = 0;
-				send[1] = 4;
-				send[2] = (byte)(blockNumber/256);
-				send[3] = (byte)(blockNumber%256);
-				SendPacket (send);
-				blockNumber++;
 				Receiver();
-			}
-			else {
+			}else {
+				System.out.println("Transfer Complete");
 				fileHandler.close();
 			}
 		}	
@@ -93,28 +86,32 @@ public class Sender {
 		int blockNum = RP.getBlockNum();
 
 		if (blockNum == blockNumber){
-			byte[] fileData = fileHandler.readFile();
-			int length = fileData.length;
-			blockNumber++;
-			send = new byte [4+ length];
-			send[0] = 0;
-			send[1] = 3;
-			send[2] = (byte)(blockNumber/256);
-			send[3] = (byte)(blockNumber%256);
-			for (int i = 0; i < fileData.length; i++){
-				send[4+i] = fileData[i];
-			}
-			SendPacket(send);
-
-			if (fileData.length == 512){	
-				Receiver();
-			}	
-			else {
+			if(finalBlock == blockNum) {
+				System.out.println("Transfer Complete");
 				fileHandler.close();
+			}else {
+				byte[] fileData = fileHandler.readFile();
+				int length = fileData.length;
+				blockNumber++;
+				send = new byte [4+ length];
+				send[0] = 0;
+				send[1] = 3;
+				send[2] = (byte)(blockNumber/256);
+				send[3] = (byte)(blockNumber%256);
+				for (int i = 0; i < fileData.length; i++){
+					send[4+i] = fileData[i];
+				}
+				SendPacket(send);
+				if (fileData.length < 512){	
+					finalBlock = blockNumber;
+				}
+				Receiver();
 			}
+			
 		}	
 		else{
 			System.out.println("Error");
+			System.out.println("Invalid block received");
 		}	
 	}
 
@@ -124,13 +121,20 @@ public class Sender {
 
 	public void SendPacket(byte [] packet) {
 		//		System.out.println("Client: sending a packet...");
-		try {
+		if(receivePacket == null) {
+			try {
+				sendPacket = new DatagramPacket(packet, packet.length,
+						InetAddress.getLocalHost(), port);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}
+		}else {
 			sendPacket = new DatagramPacket(packet, packet.length,
-					InetAddress.getLocalHost(), port);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}	
+					receivePacket.getAddress(), receivePacket.getPort());
+				
+		}
+			
 		/*
 		try {
 			Thread.sleep(500);
@@ -165,6 +169,7 @@ public class Sender {
 			fileHandler = new FileHandler();
 			fileHandler.readFile(fileName);
 			blockNumber = 0;
+			finalBlock = -1;
 			System.out.println("Write request generated.");
 		}
 
@@ -215,6 +220,8 @@ public class Sender {
 
 	public void start (Client c, Sender s, int portNum) throws IOException{
 		System.out.println("Normal mode selected");
+		receivePacket = null;
+		
 		this.port = portNum;
 		s.RequestHandler(c.getRequest(), c.getFileName());
 	}
