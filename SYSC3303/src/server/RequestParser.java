@@ -11,6 +11,7 @@ public class RequestParser {
 	private byte[] fileData;
 	private String filename, errorMsg;
 	private ArrayList<Integer> positionOf0;  // Record the position of byte 0
+	private boolean correctFormat = true;
 
 	public RequestParser() {}
 	
@@ -18,11 +19,21 @@ public class RequestParser {
 		length = len;
 		type = data[1];
 		positionOf0= new ArrayList<Integer>();
-		split(data);
+		if(type < 1 || type > 5) {
+			System.out.println("Illegal Opeartion: Wrong Type");
+			correctFormat = false;
+		}else {
+			if(data[0] != 0) {
+				System.out.println("Illegal Opeartion: Wrong Format");
+				correctFormat = false;
+			}else {
+				split(data);
+			}
+		}	
 	}
 
 	/*
-	 *	Method to parse request 
+	 *	Method to parse request and verify
 	 * */
 	private void split(byte[] data) {
 		for(int i = 0; i < length; i++) {
@@ -31,11 +42,26 @@ public class RequestParser {
 			}
 		}
 		if(type == 2 || type == 1) {
-			filename = parseFilename(data, positionOf0.get(1) - 2);
+			if(positionOf0.size() != 2) {
+				System.out.println("Illegal Opeartion: Wrong Format");
+				correctFormat = false;
+			}else {
+				filename = parseFilename(data, positionOf0.get(1) - 2);
+			}
 		}else if(type == 3 || type == 4) {
 			blockNum = parseBlockNum(data);
 			if(type == 3) {
-				fileData = parseFileData(data);
+				if(length > 516) {
+					System.out.println("Illegal Opeartion: Wrong DATA Size");
+					correctFormat = false;
+				}else {
+					fileData = parseFileData(data);
+				}	
+			}else {
+				if(length != 4) {
+					System.out.println("Illegal Opeartion: Wrong ACK Size");
+					correctFormat = false;
+				}
 			}
 		}else if(type == 5){
 			errorCode = parseErrorCode(data);
@@ -123,4 +149,7 @@ public class RequestParser {
 		return errorMsg;
 	}
 	
+	public boolean ifCorrent() {
+		return correctFormat;
+	}
 }

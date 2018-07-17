@@ -7,9 +7,9 @@ import java.util.ArrayList;
 
 public class RequestParser {
 
-	private int type, length, blockNum;
+	private int type, length, blockNum, errorCode;
 	private byte[] fileData;
-	private String filename;
+	private String filename, errorMsg;
 	private ArrayList<Integer> positionOf0;  // Record the position of byte 0
 
 	public RequestParser() {}
@@ -37,8 +37,9 @@ public class RequestParser {
 			if(type == 3) {
 				parseFileData(data);
 			}
-		}else {
-			// error handling
+		}else if(type == 5){
+			errorCode = parseErrorCode(data);
+			errorMsg = parseErrorMsg(data);
 		}
 	}
 	
@@ -78,6 +79,24 @@ public class RequestParser {
 	}
 	
 	/*
+	 *	Method to retrieve ErrorCode
+	 *	In: request
+	 *	Out: error code
+	 * */
+	private byte parseErrorCode(byte[] data) {
+		return data[3];
+	}
+	
+	/*
+	 *	Method to retrieve error message
+	 *	In: request
+	 *	Out: error message
+	 * */
+	private String parseErrorMsg(byte[] data) {
+		return new String(data, 4, length - 5);
+	}
+	
+	/*
 	 * Public information getters
 	 * */
 	public int getType() {
@@ -95,5 +114,14 @@ public class RequestParser {
 	public byte[] getFileData() {
 		return fileData;
 	}
+	
+	public int getErrorCode() {
+		return errorCode;
+	}
+	
+	public String getErrorMsg() {
+		return errorMsg;
+	}
+		
 	
 }
