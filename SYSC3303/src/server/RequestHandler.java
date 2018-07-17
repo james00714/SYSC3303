@@ -55,23 +55,28 @@ public class RequestHandler extends Thread{
 		length = myPacket.getLength();
 		RP.parseRequest(myPacket.getData(), length);
 		
-		try{
-			switch (RP.getType()) {
-				case 1:	handleRead(RP.getFilename());
-					break;
-				case 2:	handleWrite(RP.getFilename());
-					break;
-				case 3:	handleData(RP.getBlockNum(), RP.getFileData());
-					break;
-				case 4:	handleACK(RP.getBlockNum());
-					break;
-				case 5:	handleERROR(RP.getErrorCode(), RP.getErrorMsg());
-					break;
-			}
-		}catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}  
+		if(RP.ifCorrent()) {
+			try{
+				switch (RP.getType()) {
+					case 1:	handleRead(RP.getFilename());
+						break;
+					case 2:	handleWrite(RP.getFilename());
+						break;
+					case 3:	handleData(RP.getBlockNum(), RP.getFileData());
+						break;
+					case 4:	handleACK(RP.getBlockNum());
+						break;
+					case 5:	handleERROR(RP.getErrorCode(), RP.getErrorMsg());
+						break;
+				}
+			}catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			} 
+		}else {
+			SendErrorPacket(4, "Illegal TFTP operation.");
+		}
+		 
 	}
 	
 	/*
@@ -148,8 +153,7 @@ public class RequestHandler extends Thread{
 			}
 		}else {
 			System.out.println("ERROR: Unknown TID.");
-			//	Error
-			//	Unknown TID
+			SendErrorPacket(5, "Unknown transfer ID.");
 		}
 	}
 	
@@ -185,8 +189,7 @@ public class RequestHandler extends Thread{
 			}
 		}else {
 			System.out.println("ERROR: Unknown TID.");
-			//	Error
-			//	Unknown TID
+			SendErrorPacket(5, "Unknown transfer ID.");
 		}
 	}
 	
@@ -229,6 +232,8 @@ public class RequestHandler extends Thread{
 	 * 	In: error code, error message
 	 * */
 	public void SendErrorPacket(int errorCode, String msg){
+		
+		System.out.println("Sending error packet, code " + errorCode);
 		
 		byte[] sendData = new byte[5 + msg.length()];
 		byte[] msgData = msg.getBytes();
