@@ -76,10 +76,10 @@ public class Client {
 			//t.close();	
 		}else {
 			if (mode.equals("1")){
-				s.start(this, s, 69);
+				s.start(this, 69);
 				s.Receiver();
 			}else if(mode.equals("2")){
-				s.start(this, s, 23);
+				s.start(this, 23);
 				s.Receiver();	
 			}else {
 				System.out.println("Invalid mode input, please try again.");
