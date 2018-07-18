@@ -149,7 +149,7 @@ public class RequestParser {
 		return errorMsg;
 	}
 	
-	public boolean ifCorrent() {
+	public boolean ifCorrect() {
 		return correctFormat;
 	}
 }
