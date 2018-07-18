@@ -38,7 +38,7 @@ public class UI {
 			}
 		}else if(type == 5){
 			System.out.println("\tErrorCode: " + RP.getErrCode());
-			System.out.println("\tError Message: " + RP.getErrCode());
+			System.out.println("\tError Message: " + RP.getErrMsg());
 		}
 
 		System.out.println("\n\tAvailable Operations:");
