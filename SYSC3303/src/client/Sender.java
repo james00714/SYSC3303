@@ -251,12 +251,12 @@ public class Sender {
 	/*
 	 * Start the client
 	*/
-	public void start (Client c, Sender s, int portNum) throws IOException{
+	public void start (Client c, int portNum) throws IOException{
 		System.out.println("Normal mode selected");
 		receivePacket = null;
 		
 		this.port = portNum;
-		s.RequestHandler(c.getRequest(), c.getFileName());
+		this.RequestHandler(c.getRequest(), c.getFileName());
 	}
 
 }
