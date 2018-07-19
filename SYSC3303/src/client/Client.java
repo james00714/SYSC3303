@@ -32,6 +32,7 @@ public class Client {
 
 	/*
 	 * Method for the UI
+	 * First ask user input for mode, then read/write request and finally output mode 
 	*/
 	public void menu (){
 		Scanner sc = new Scanner(System.in);
@@ -65,7 +66,7 @@ public class Client {
 	}
 
 	/*
-	 * Open Normal/Test mode depends on the user input in UI
+	 * Open Normal/Test mode depends on the user input in UI, if user enter quit end the program
 	*/
 	public void start (Sender s) throws IOException{
 

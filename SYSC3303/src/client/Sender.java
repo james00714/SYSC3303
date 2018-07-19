@@ -47,7 +47,7 @@ public class Sender {
 	}
 
 	/*
-	 * Handle received packet
+	 * Handle received packet and go to corresponding handle function
 	*/
 	public void ReceiveHandler (DatagramPacket receivePacket) throws IOException{
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
@@ -63,7 +63,7 @@ public class Sender {
 	}
 
 	/*
-	 * Deal with received DATA packet
+	 * Deal with received DATA packet, check the block number 
 	*/
 	public void DATA (DatagramPacket receivePacket) throws IOException{
 		System.out.println("Received Data packet.");
