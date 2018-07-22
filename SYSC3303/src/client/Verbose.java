@@ -1,3 +1,6 @@
+/*
+ * Vebose mode for the client
+*/
 package client;
 import java.net.*;
 
@@ -5,7 +8,10 @@ public class Verbose {
 	private RequestParser RP;
 
 	public Verbose() {}
-
+	
+	/*
+	 * verbose mode for received packets
+	*/
 	public void PrintReceiverV (DatagramPacket receivePacket) {
 		RP = new RequestParser();
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
@@ -26,6 +32,9 @@ public class Verbose {
 		System.out.println(received);
 	}
 
+	/*
+	 * Verbose mode for sended packets
+	*/
 	public void PrintSender(DatagramPacket sendPacket) {
 		RP = new RequestParser();
 		RP.parseRequest(sendPacket.getData(), sendPacket.getLength());

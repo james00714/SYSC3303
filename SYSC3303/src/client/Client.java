@@ -1,3 +1,6 @@
+/*
+ *SYSC3303 Project G11 Client
+*/
 package client;
 
 import java.io.*;
@@ -27,7 +30,10 @@ public class Client {
 		return this.fig;
 	}
 
-
+	/*
+	 * Method for the UI
+	 * First ask user input for mode, then read/write request and finally output mode 
+	*/
 	public void menu (){
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
@@ -59,6 +65,9 @@ public class Client {
 		}
 	}
 
+	/*
+	 * Open Normal/Test mode depends on the user input in UI, if user enter quit end the program
+	*/
 	public void start (Sender s) throws IOException{
 
 		if (mode.equals("quit") || request.equals("quit") || fileName.equals("quit") || fig.equals("quit")) {
@@ -68,10 +77,10 @@ public class Client {
 			//t.close();	
 		}else {
 			if (mode.equals("1")){
-				s.start(this, s, 69);
+				s.start(this, 69);
 				s.Receiver();
 			}else if(mode.equals("2")){
-				s.start(this, s, 23);
+				s.start(this, 23);
 				s.Receiver();	
 			}else {
 				System.out.println("Invalid mode input, please try again.");
@@ -79,6 +88,9 @@ public class Client {
 		}	
 	}
 
+	/*
+	 * Client Starts
+	*/
 	public static void main(String[] args) throws IOException {
 		Client c = new Client();
 		Sender n = new Sender (c);

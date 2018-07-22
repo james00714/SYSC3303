@@ -1,3 +1,6 @@
+/*
+ * Thread class for error simulator
+*/
 package errorSimulator;
 
 import java.io.*;
@@ -41,6 +44,9 @@ public class ESThread extends Thread{
 
 	}
 
+	/*
+	 * Modify the packet by given choice in the UI
+	*/
 	public byte[] Modify(DatagramPacket packet, RequestParser RP, UI ui) {
 		int choice = ui.mainMenu();
 		byte[] sendData = null;
@@ -124,6 +130,9 @@ public class ESThread extends Thread{
 		return sendData;
 	}
 
+	/*
+	 * Send the packet
+	*/
 	public void send(byte[] data, InetAddress addr, int port) {
 
 		sendPacket = new DatagramPacket(data, data.length,
@@ -139,6 +148,9 @@ public class ESThread extends Thread{
 		displaySend(sendPacket);	
 	}
 
+	/*
+	 * Receive packet from client
+	*/
 	public void receiveFromClient() {
 		if(receiveClientPacket == null) {
 			byte data[] = new byte[1024];
@@ -166,6 +178,9 @@ public class ESThread extends Thread{
 		receiveFromServer();
 	}
 
+	/*
+	 * Receive packet from server
+	*/
 	public void receiveFromServer() {
 		try {
 			System.out.println("ES: Waiting for server response...");
@@ -186,6 +201,9 @@ public class ESThread extends Thread{
 		receiveFromClient();
 	}
 
+	/*
+	 * Print send packet
+	*/
 	public void displaySend(DatagramPacket sendPacket) {
 		System.out.println("ES : Sending packet:");
 		System.out.println("To host: " + sendPacket.getAddress());
