@@ -55,7 +55,7 @@ public class RequestHandler extends Thread{
 		length = myPacket.getLength();
 		RP.parseRequest(myPacket.getData(), length);
 		
-		if(RP.ifCorrent()) {
+		if(RP.ifCorrect()) {
 			try{
 				switch (RP.getType()) {
 					case 1:	handleRead(RP.getFilename());

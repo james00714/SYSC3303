@@ -1,3 +1,7 @@
+/*
+ * UI class for error simulator
+ * Allow User to modify the packet to create different error codes 
+*/
 package errorSimulator;
 
 import java.util.Scanner;
@@ -6,7 +10,6 @@ public class UI {
 
 	RequestParser RP;
 	String cmd;
-
 	Scanner in;
 
 	public UI(RequestParser RP) {
@@ -16,7 +19,9 @@ public class UI {
 
 
 
-
+	/*
+	 * Menu for the Error simulator
+	*/
 	public int mainMenu() {
 
 		int index = 3, num = 0;
@@ -33,7 +38,7 @@ public class UI {
 			}
 		}else if(type == 5){
 			System.out.println("\tErrorCode: " + RP.getErrCode());
-			System.out.println("\tError Message: " + RP.getErrCode());
+			System.out.println("\tError Message: " + RP.getErrMsg());
 		}
 
 		System.out.println("\n\tAvailable Operations:");
@@ -76,6 +81,9 @@ public class UI {
 		return num;
 	}
 
+	/*
+	 * Helper method for UI
+	*/
 	public int type2 () {
 		int second = -1, type = RP.getType();
 		if (type == 1 || type ==2) {
@@ -91,7 +99,9 @@ public class UI {
 		return second; 
 	}
 
-
+	/*
+	 * Helper method for UI
+	*/
 	public int type3() {
 		int third = -1, type = RP.getType();
 		if (type == 3) {
@@ -105,7 +115,9 @@ public class UI {
 		return third;
 	}
 
-
+	/*
+	 * Ask user for new Opcode
+	*/
 	public int askOpCode() {
 		int num = -1;
 		System.out.println("Please enter new Opcode: ");
@@ -122,7 +134,10 @@ public class UI {
 
 		}
 	}
-
+	
+	/*
+	 * Ask user for new file name
+	*/
 	public byte [] askFileName() {
 		String newName = "";
 		System.out.println("Please enter new Filename");
@@ -131,6 +146,9 @@ public class UI {
 		return fileName;
 	}
 
+	/*
+	 * Ask user for new block number
+	*/
 	public int askBkNumber() {
 		int Bk = -1;
 		System.out.println("Please enter new Block number");
@@ -149,6 +167,9 @@ public class UI {
 		}
 	}
 
+	/*
+	 * Ask user for new error code
+	*/
 	public int askErrCode() {
 		int code = -1;
 		System.out.println("Please enter new Error code");

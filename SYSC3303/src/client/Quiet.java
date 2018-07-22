@@ -1,3 +1,6 @@
+/*
+ * Class that perform quiet mode for client
+*/
 package client;
 import java.net.*;
 
@@ -5,6 +8,9 @@ public class Quiet {
 
 	public Quiet() {}
 	
+	/*
+	 * Quiet mode for the received packet
+	*/
 	public void PrintReceiverQ (DatagramPacket receivePacket) {
 		System.out.println("Client: Packet received:");
 //		System.out.println("From host: " + receivePacket.getAddress());
@@ -18,6 +24,9 @@ public class Quiet {
 		System.out.println(received);
 	}
 	
+	/*
+	 * Quiet mode for sended packet
+	*/
 	public void PrintSenderQ (DatagramPacket sendPacket) {
 		System.out.println("Client: Sending packet:");
 //		System.out.println("To host: " + sendPacket.getAddress());

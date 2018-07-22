@@ -1,3 +1,6 @@
+/*
+ * Prepare and send the packet after UI in the client class
+*/
 package client;
 
 import java.io.*;
@@ -22,6 +25,9 @@ public class Sender {
 		}
 	}
 
+	/*
+	 * Receive packet
+	*/
 	public void Receiver () throws IOException{
 		System.out.println("Client: waiting a packet...");
 		byte data[] = new byte[1024];
@@ -40,6 +46,9 @@ public class Sender {
 
 	}
 
+	/*
+	 * Handle received packet and go to corresponding handle function
+	*/
 	public void ReceiveHandler (DatagramPacket receivePacket) throws IOException{
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
 
@@ -53,6 +62,9 @@ public class Sender {
 		}
 	}
 
+	/*
+	 * Deal with received DATA packet, check the block number 
+	*/
 	public void DATA (DatagramPacket receivePacket) throws IOException{
 		System.out.println("Received Data packet.");
 		byte [] send = new byte [4];
@@ -79,7 +91,9 @@ public class Sender {
 		}
 	}
 
-
+	/*
+	 * Deal with received ACK packet
+	*/
 	public void ACK (DatagramPacket receivePacket) throws IOException{
 		System.out.println("Received ACK packet.");
 		byte [] send; 
@@ -114,13 +128,19 @@ public class Sender {
 			System.out.println("Invalid block received");
 		}	
 	}
-
+	
+	/*
+	 * Deal with received error packet
+	*/
 	public void ERR (){
 		System.out.println("Received Error Packet.");
 		System.out.println("Error code: " + RP.getErrorCode());
 		System.out.println("Error Message: " + RP.getErrorMsg());
 	}
 
+	/*
+	 * Send packets
+	*/
 	public void SendPacket(byte [] packet) {
 		//		System.out.println("Client: sending a packet...");
 		if(receivePacket == null) {
@@ -154,6 +174,9 @@ public class Sender {
 		PrintSender(sendPacket);
 	}
 
+	/*
+	 * Handle user request from UI
+	*/
 	public void  RequestHandler(String request, String fileName) throws IOException{
 		byte [] send = null;
 		byte [] length = fileName.getBytes();
@@ -203,7 +226,9 @@ public class Sender {
 		}	
 	}
 
-
+	/*
+	 * Print sended packet
+	*/
 	public void PrintSender (DatagramPacket sendPacket) {
 		Verbose v = new Verbose();
 		Quiet q = new Quiet();
@@ -216,16 +241,22 @@ public class Sender {
 		}
 	}
 
+	/*
+	 * Close the sockeet
+	*/
 	public void Close (){
 		sendReceiveSocket.close();
 	}
-
-	public void start (Client c, Sender s, int portNum) throws IOException{
+	
+	/*
+	 * Start the client
+	*/
+	public void start (Client c, int portNum) throws IOException{
 		System.out.println("Normal mode selected");
 		receivePacket = null;
 		
 		this.port = portNum;
-		s.RequestHandler(c.getRequest(), c.getFileName());
+		this.RequestHandler(c.getRequest(), c.getFileName());
 	}
 
 }
