@@ -90,9 +90,10 @@ public class RequestHandler extends Thread{
 			
 		if(myClient == null) {
 			//	Save client information and send first piece of data
-			myClient = new Client(myPacket, 1, new FileHandler());
+			myClient = new Client(myPacket, 1, new FileHandler(this));
 			finalBlock = -1;
-			byte[] filedata = myClient.getFileHandler().readFile(filename);
+			byte[] filedata = myClient.getFileHandler().readFile(filename);	
+			if(filedata == null) return;
 			System.out.println("Loading File...");
 			if(filedata.length < 512) {
 				finalBlock = myClient.getBlockNum();
@@ -115,8 +116,8 @@ public class RequestHandler extends Thread{
 		
 		//	Create Client and save information into it
 		if(myClient == null) {
-			myClient = new Client(myPacket, 1, new FileHandler());
-			myClient.getFileHandler().prepareWrite(filename);
+			myClient = new Client(myPacket, 1, new FileHandler(this));
+			if(myClient.getFileHandler().prepareWrite(filename) == false) return;
 			SendDataPacket(new byte[0], myClient.getBlockNum() - 1);
 			receiveFromClient();
 		}else {
@@ -136,7 +137,7 @@ public class RequestHandler extends Thread{
 		if(myClient != null) {
 			if(block == myClient.getBlockNum()){
 				System.out.println("New Block Received, Writing...");
-				myClient.getFileHandler().writeFile(fileData);
+				if(myClient.getFileHandler().writeFile(fileData) == false) return;
 				myClient.incrementBlockNum();			
 				SendDataPacket(new byte[0], myClient.getBlockNum() - 1);
 				if(myPacket.getLength() < 516) {
@@ -175,6 +176,7 @@ public class RequestHandler extends Thread{
 					myClient.close();
 				}else {
 					byte[] fileData = myClient.getFileHandler().readFile();
+					if(fileData == null) return;
 					if(fileData.length < 512) {
 						finalBlock = myClient.getBlockNum();
 					}
