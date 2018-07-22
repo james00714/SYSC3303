@@ -52,29 +52,34 @@ public class Client {
 				fileName = sc.next();
 
 				if (request.equals("1")) {
+					if (!this.checkDisk(fileName)) {
+						System.out.println("Disk full can't read.");
+						System.out.println	("Please delete file and come again :)");
+					}
+
 
 					while (this.checkFile(fileName)) {
-						System.out.println("checking error.");
 						System.out.println("File already exist error.");
 						System.out.println	("Please enter a new file Name");
 						fileName = sc.next();
 					}
+
+
+
 				}else if (request.equals("2")) {
-					while (!this.checkDisk(fileName)) {
-						System.out.println("File size over disk space.");
-						System.out.println("Please enter a smaller file. ");
+					while (!this.checkFile(fileName)) {
+						System.out.println("File not found error.");
+						System.out.println("Please re-enter your file Name ");
 						fileName = sc.next();
-						while (!this.checkFile(fileName)) {
-							System.out.println("File not found error.");
-							System.out.println("Please re-enter your file Name ");
-							fileName = sc.next();
-							while (!this.permission(fileName)) {
-								System.out.println("Access denied error. File can't write.");
-								System.out.println("Please re-enter your file Name ");
-								fileName = sc.next();
-							}
-						}
 					}
+
+					while (!this.permission(fileName)) {
+						System.out.println("Access violation error.");
+						System.out.println("Please enter a new file Name ");
+						fileName = sc.next();
+					}
+
+
 				}else{
 					System.out.println("Error");
 				}
@@ -96,9 +101,9 @@ public class Client {
 
 	//file not found
 	public boolean checkFile (String fileName) {
-		check = new File (fileName);
+		check = new File ("src\\client\\files\\" + fileName);
 		if (check.exists()) {
-			System.out.println("file exist.");
+			System.out.println("File exist.");
 			return true;
 		}
 
@@ -109,6 +114,7 @@ public class Client {
 	public boolean permission (String fileName) {
 		permit = new File ("src\\client\\files\\" + fileName);
 		if (permit.canWrite()) {
+			System.out.println("Access granted");
 			return true;
 		}
 		return false;
@@ -119,7 +125,7 @@ public class Client {
 		space = new File ("src\\client\\files\\" + fileName);
 		long length = space.length();
 		if (space.getUsableSpace() == length) {
-		//	System.out.println("Disk available space: " +space.getUsableSpace());
+			System.out.println("Disk available space: " +space.getUsableSpace());
 			return true;
 		}
 		return false;
