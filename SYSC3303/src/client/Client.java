@@ -1,6 +1,6 @@
 /*
  *SYSC3303 Project G11 Client
-*/
+ */
 package client;
 
 import java.io.*;
@@ -9,6 +9,7 @@ import java.util.Scanner;
 public class Client {
 	private	String mode, request, fig;
 	private	String fileName;
+	private File check, permit, space;
 	private	boolean running = true;
 
 
@@ -33,7 +34,7 @@ public class Client {
 	/*
 	 * Method for the UI
 	 * First ask user input for mode, then read/write request and finally output mode 
-	*/
+	 */
 	public void menu (){
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
@@ -49,6 +50,34 @@ public class Client {
 			if (!request.equals("quit")) {
 				System.out.println("Please enter your file Name ");
 				fileName = sc.next();
+
+				if (request.equals("1")) {
+
+					while (this.checkFile(fileName)) {
+						System.out.println("checking error.");
+						System.out.println("File already exist error.");
+						System.out.println	("Please enter a new file Name");
+						fileName = sc.next();
+					}
+				}else if (request.equals("2")) {
+					while (!this.checkDisk(fileName)) {
+						System.out.println("File size over disk space.");
+						System.out.println("Please enter a smaller file. ");
+						fileName = sc.next();
+						while (!this.checkFile(fileName)) {
+							System.out.println("File not found error.");
+							System.out.println("Please re-enter your file Name ");
+							fileName = sc.next();
+							while (!this.permission(fileName)) {
+								System.out.println("Access denied error. File can't write.");
+								System.out.println("Please re-enter your file Name ");
+								fileName = sc.next();
+							}
+						}
+					}
+				}else{
+					System.out.println("Error");
+				}
 				if(!fileName.equals("quit")) {
 					System.out.println("Please enter your mode for data");
 					System.out.println("1. Verbose");
@@ -65,9 +94,40 @@ public class Client {
 		}
 	}
 
+	//file not found
+	public boolean checkFile (String fileName) {
+		check = new File (fileName);
+		if (check.exists()) {
+			System.out.println("file exist.");
+			return true;
+		}
+
+		return false;
+	}
+
+	//access violation
+	public boolean permission (String fileName) {
+		permit = new File ("src\\client\\files\\" + fileName);
+		if (permit.canWrite()) {
+			return true;
+		}
+		return false;
+	}
+
+	//check disk full
+	public boolean checkDisk (String fileName) {
+		space = new File ("src\\client\\files\\" + fileName);
+		long length = space.length();
+		if (space.getUsableSpace() == length) {
+		//	System.out.println("Disk available space: " +space.getUsableSpace());
+			return true;
+		}
+		return false;
+	}
+
 	/*
 	 * Open Normal/Test mode depends on the user input in UI, if user enter quit end the program
-	*/
+	 */
 	public void start (Sender s) throws IOException{
 
 		if (mode.equals("quit") || request.equals("quit") || fileName.equals("quit") || fig.equals("quit")) {
@@ -90,7 +150,7 @@ public class Client {
 
 	/*
 	 * Client Starts
-	*/
+	 */
 	public static void main(String[] args) throws IOException {
 		Client c = new Client();
 		Sender n = new Sender (c);
