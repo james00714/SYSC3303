@@ -52,7 +52,7 @@ public class Client {
 				fileName = sc.next();
 
 				if (request.equals("1")) {
-					if (!this.checkDisk(fileName)) {
+					if (!this.checkDisk(fileName)	) {
 						System.out.println("Disk full can't read.");
 						System.out.println	("Please delete file and come again :)");
 					}
@@ -123,8 +123,7 @@ public class Client {
 	//check disk full
 	public boolean checkDisk (String fileName) {
 		space = new File ("src\\client\\files\\" + fileName);
-		long length = space.length();
-		if (space.getUsableSpace() == length) {
+		if (space.getUsableSpace() > 0) {
 			System.out.println("Disk available space: " +space.getUsableSpace());
 			return true;
 		}
