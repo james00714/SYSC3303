@@ -63,11 +63,13 @@ public class Listener extends Thread{
 		
 		//	Display information
 		//	Can be achieved by a new UI class
-		displayReceived(receivePacket);
-		
-		//	Parse the request and handle it with a new thread
-		RequestHandler RH = new RequestHandler(receivePacket);
-		RH.start(); 
+		if(receivePacket.getPort() != -1){
+			displayReceived(receivePacket);
+			
+			//	Parse the request and handle it with a new thread
+			RequestHandler RH = new RequestHandler(receivePacket);
+			RH.start(); 
+		}	
 	}
 	
 	/*
@@ -77,13 +79,6 @@ public class Listener extends Thread{
 		System.out.println("Closing listener...");
 		running = false;
 		sendReceiveSocket.close();	
-	}
-	
-	/*
-	*	Method to terminate program
-	*/
-	public void quit() {
-		sendReceiveSocket.close();
 	}
 	
 	/*

@@ -13,10 +13,12 @@ public class FileHandler {
 
 	private FileInputStream fs;
 	private FileOutputStream os;
-	private File fileToWrite;
 	private byte[] fileBuffer;
+	private RequestHandler RH;
 
-	public FileHandler() {}
+	public FileHandler(RequestHandler requestHandler) {
+		RH = requestHandler;
+	}
 
 	/*
 	 * Method to handle read request
@@ -30,19 +32,39 @@ public class FileHandler {
 		
 		//	Try loading the file
 		int count;
-		fs = new FileInputStream(file);
-		fileBuffer = new byte[512];	
-		if ((count = fs.read(fileBuffer)) != -1){
-			
-			//	If reached the end of file, size will be reduced
-			if(count < fileBuffer.length) {
-				byte[] tempBuffer = new byte[count];
-				for(int i = 0; i < count; i++) {
-					tempBuffer[i] = fileBuffer[i];
-				}
-				fileBuffer = tempBuffer;
-			}
+		File f = new File(file);
+		if(!f.exists()) {
+			System.out.println("ERROR: File Not Found.");
+			RH.SendErrorPacket(1, "File not found");
+			return null;
 		}
+		try {
+			fs = new FileInputStream(file);
+			fileBuffer = new byte[512];	
+			if ((count = fs.read(fileBuffer)) != -1){
+				
+				//	If reached the end of file, size will be reduced
+				if(count < fileBuffer.length) {
+					byte[] tempBuffer = new byte[count];
+					for(int i = 0; i < count; i++) {
+						tempBuffer[i] = fileBuffer[i];
+					}
+					fileBuffer = tempBuffer;
+				}
+			}
+		}catch(IOException e) {
+			
+			// Access denied
+			if(e.getMessage().contains("Access is denied")) {
+				System.out.println("ERROR: Access Violation.");
+				RH.SendErrorPacket(2, "Access violation");
+			}else {
+				System.out.print("IO Exception: likely:");
+				e.printStackTrace();
+			}
+			return null;
+		}
+		
 
 		// return data loaded
 		return fileBuffer;
@@ -52,11 +74,11 @@ public class FileHandler {
 	 * Method to read the rest of file
 	 * In: file path or name
 	 * */
-	public byte[] readFile() {
+	public byte[] readFile(){
 
 		int count;
 		fileBuffer = new byte[512];
-
+		
 		try {
 			if ((count = fs.read(fileBuffer)) != -1){
 				//	If reached the end of file, size will be reduced
@@ -67,11 +89,19 @@ public class FileHandler {
 					}
 					fileBuffer = tempBuffer;
 				}
-			}		
-		}catch (IOException e) {
-			e.printStackTrace();
-		}	
-
+			}
+		} catch (IOException e) {
+			
+			// Access denied
+			if(e.getMessage().contains("Access is denied")) {
+				System.out.println("ERROR: Access Violation.");
+				RH.SendErrorPacket(2, "Access violation");
+			}else {
+				System.out.print("IO Exception: likely:");
+				e.printStackTrace();
+			}
+			return null;
+		}		
 		// return data loaded
 		return fileBuffer;
 	}
@@ -80,7 +110,7 @@ public class FileHandler {
 	 * Method to prepare work before write a file
 	 * In: file path or name
 	 * */
-	public void prepareWrite(String file) {
+	public boolean prepareWrite(String file) {
 
 		System.out.println("Prepare Writing File: " + file);
 		
@@ -94,17 +124,31 @@ public class FileHandler {
 			file = file.substring(index, file.length());
 		}
 		file = "src\\server\\files\\" + file;
-		try{
-			fileToWrite = new File(file);
-			// create if does not exists
-			if (!fileToWrite.exists()) {
-				fileToWrite.createNewFile();
-			}
-			// set output stream to write file
-			os = new FileOutputStream(fileToWrite);
-		}catch (IOException e) {
-			e.printStackTrace();
+		File fileToWrite = new File(file);
+		
+		// File already exist
+		if(fileToWrite.exists()) {
+			System.out.println("ERROR: File already exists.");
+			RH.SendErrorPacket(6, "File already exists");
+			return false;
 		}
+		try{
+			fileToWrite.createNewFile();
+			// set output stream to write file
+			os = new FileOutputStream(fileToWrite);		
+		} catch (IOException e) {
+			
+			// Access denied
+			if(e.getMessage().contains("Access is denied")) {
+				System.out.println("ERROR: Access Violation.");
+				RH.SendErrorPacket(2, "Access violation");
+			}else {
+				System.out.print("IO Exception: likely:");
+				e.printStackTrace();
+			}
+			return false;
+		}
+		return true;
 	}
 
 	/*
@@ -124,11 +168,30 @@ public class FileHandler {
 	 * Method to prepare write data to a file
 	 * In: file data
 	 * */
-	public void writeFile(byte[] fileData) throws IOException {
+	public boolean writeFile(byte[] fileData){
 		
 		System.out.println("Writing file...");
-		
-		os.write(fileData);
-		os.flush();
+		try{
+			os.write(fileData);
+			os.flush();	
+			
+		} catch (IOException e) {
+			
+			// Access denied
+			if(e.getMessage().contains("Access is denied")) {
+				System.out.println("ERROR: Access Violation.");
+				RH.SendErrorPacket(2, "Access violation");
+				
+			//	Not enough space
+			}else if(e.getMessage().equals("There is not enough space on the disk")) {
+				System.out.println("ERROR: Not Enough Space.");
+				RH.SendErrorPacket(3, "Disk full or allocation exceeded");
+			}else {
+				System.out.print("IO Exception: likely:");
+				e.printStackTrace();
+			}
+			return false;
+		}
+		return true;
 	}
 }
