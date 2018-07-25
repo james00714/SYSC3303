@@ -181,8 +181,11 @@ public class Sender {
 	public void  RequestHandler(String request, String fileName) throws IOException{
 		byte [] send = null;
 		byte [] length = fileName.getBytes();
-
-		send = new byte [3 +length.length];
+		
+		String mode = "netascii";
+		byte [] length2 = mode.getBytes();
+		
+		send = new byte [4 +length.length + length2.length];
 		send[0] = 0;
 		if(request.equals("1")) {
 			send[1] = 1;
@@ -205,6 +208,12 @@ public class Sender {
 
 		send[2+length.length] = 0;
 
+		for (int j = 0; j<length2.length; j++) {
+			send[2+length.length+j] = length2[j];
+		}
+		
+		send[2+length.length + length2.length] = 0;
+		
 		System.out.println("printing out byte array");
 		for (int i = 0; i < send.length; i++) {
 			System.out.println(send[i]);

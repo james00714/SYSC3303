@@ -47,6 +47,7 @@ public class Client {
 			System.out.println("1. RRQ <Read Request>");
 			System.out.println("2. WRQ <Write Request>");
 			request = sc.next();
+			System.out.println("Default Mode: netascii");
 			if (!request.equals("quit")) {
 				System.out.println("Please enter your file Name ");
 				fileName = sc.next();
@@ -57,14 +58,13 @@ public class Client {
 						System.out.println	("Please delete file and come again :)");
 					}
 
-
-					while (this.checkFile(fileName)) {
-						System.out.println("File already exist error.");
-						System.out.println	("Please enter a new file Name");
-						fileName = sc.next();
+					if (this.checkDisk(fileName)	) {
+						while (this.checkFile(fileName)) {
+							System.out.println("File already exist error.");
+							System.out.println	("Please enter a new file Name");
+							fileName = sc.next();
+						}
 					}
-
-
 
 				}else if (request.equals("2")) {
 					while (!this.checkFile(fileName)) {
