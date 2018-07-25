@@ -9,7 +9,7 @@ public class RequestParser {
 
 	private int type, length, blockNum, errorCode;
 	private byte[] fileData;
-	private String filename, errorMsg;
+	private String filename, mode, errorMsg;
 	private ArrayList<Integer> positionOf0;  // Record the position of byte 0
 	private boolean correctFormat = true;
 
@@ -42,11 +42,16 @@ public class RequestParser {
 			}
 		}
 		if(type == 2 || type == 1) {
-			if(positionOf0.size() != 2) {
+			if(positionOf0.size() != 3) {
 				System.out.println("Illegal Opeartion: Wrong Format");
 				correctFormat = false;
 			}else {
 				filename = parseFilename(data, positionOf0.get(1) - 2);
+				mode = parseMode(data, positionOf0.get(1) + 1, positionOf0.get(2) - positionOf0.get(1) - 1);
+				if(!mode.toLowerCase().equals("netascii") && !mode.toLowerCase().equals("octet")) {
+					System.out.println("Illegal Opeartion: Wrong Mode");
+					correctFormat = false;
+				}
 			}
 		}else if(type == 3 || type == 4) {
 			blockNum = parseBlockNum(data);
@@ -76,6 +81,15 @@ public class RequestParser {
 	 * */
 	private String parseFilename(byte[] data, int len) {
 		return new String(data, 2, len);
+	}
+	
+	/*
+	 *	Method to parse mode
+	 *	In: request, filename end position
+	 *	Out: mode
+	 * */
+	public String parseMode(byte[] data, int start, int len) {
+		return new String(data, start, len);
 	}
 
 	/*
