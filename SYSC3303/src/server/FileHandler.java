@@ -53,7 +53,7 @@ public class FileHandler {
 			}
 			if(count == -1) return new byte[0];
 		}catch(IOException e) {
-			
+			close();
 			// Access denied
 			if(e.getMessage().contains("Access is denied")) {
 				System.out.println("ERROR: Access Violation.");
@@ -92,7 +92,7 @@ public class FileHandler {
 			}
 			if(count == -1) return new byte[0];
 		} catch (IOException e) {
-			
+			close();
 			// Access denied
 			if(e.getMessage().contains("Access is denied")) {
 				System.out.println("ERROR: Access Violation.");
@@ -156,12 +156,17 @@ public class FileHandler {
 	 * Method to close stream
 	 * In: file data
 	 * */
-	public void close() throws IOException{
-		if(fs != null) {
-			fs.close();
-		}
-		if(os != null){
-			os.close();
+	public void close(){
+		try {
+			if(fs != null) {
+				fs.close();
+			}
+			if(os != null){
+				os.close();
+			}
+		} catch (IOException e) {
+			System.out.print("IO Exception: likely:");
+			e.printStackTrace();
 		}
 	}
 
@@ -177,7 +182,7 @@ public class FileHandler {
 			os.flush();	
 			
 		} catch (IOException e) {
-			
+			close();
 			// Access denied
 			if(e.getMessage().contains("Access is denied")) {
 				System.out.println("ERROR: Access Violation.");

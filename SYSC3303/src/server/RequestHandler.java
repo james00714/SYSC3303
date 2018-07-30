@@ -10,15 +10,19 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 
 public class RequestHandler extends Thread{
 	
-	RequestParser RP;
-	DatagramPacket myPacket, sendPacket;
-	DatagramSocket sendReceiveSocket;
-	int length, finalBlock, TID;
-	Client myClient;
-	String ID;
+	private static final int TIMEOUTMAX = 4;
+	private static final String[] TYPES = {"RRQ", "WRQ", "DATA", "ACK", "ERROR"};
+	
+	private RequestParser RP;
+	private DatagramPacket myPacket, sendPacket;
+	private DatagramSocket sendReceiveSocket;
+	private int length, finalBlock, TID;
+	private Client myClient;
+	private String ID, currentRequest;
 	
 	/*
 	 * Construct handler with packet information
@@ -29,6 +33,7 @@ public class RequestHandler extends Thread{
 		myPacket = receivePacket;
 		TID = receivePacket.getPort();
 		ID = "No." + TID + ": ";
+		
 		try{
 			sendReceiveSocket = new DatagramSocket();
 		}catch (SocketException se){
@@ -55,7 +60,12 @@ public class RequestHandler extends Thread{
 		if(myPacket.getPort() != TID) {
 			System.out.println("ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			receiveFromClient();
+			try{
+				receiveFromClient();
+			}catch (IOException e) {
+				e.printStackTrace();
+				System.exit(1);
+			}			
 		}else {
 			RP = new RequestParser();
 			length = myPacket.getLength();
@@ -97,6 +107,7 @@ public class RequestHandler extends Thread{
 		if(myClient == null) {
 			//	Save client information and send first piece of data
 			myClient = new Client(myPacket, 1, new FileHandler(this));
+			currentRequest = "READ";
 			finalBlock = -1;
 			byte[] filedata = myClient.getFileHandler().readFile(filename);	
 			if(filedata == null) {
@@ -126,6 +137,7 @@ public class RequestHandler extends Thread{
 		//	Create Client and save information into it
 		if(myClient == null) {
 			myClient = new Client(myPacket, 1, new FileHandler(this));
+			currentRequest = "WRITE";
 			if(myClient.getFileHandler().prepareWrite(filename) == false) {
 				System.out.println(ID + "Disconnected.");
 				return;
@@ -164,7 +176,8 @@ public class RequestHandler extends Thread{
 					receiveFromClient();
 				}
 			}else{
-				System.out.println("ERROR: Wrong package received.");
+				System.out.println("ERROR: Ignoring wrong DATA package received.");
+				receiveFromClient();
 				//	Error
 				//	Wrong ACK packet received
 			}
@@ -202,9 +215,8 @@ public class RequestHandler extends Thread{
 				}
 							
 			}else{
-				System.out.println("ERROR: Wrong package received.");
-				//	Error
-				//	Wrong ACK packet received
+				System.out.println("ERROR: Ignoring wrong ACK package received.");
+				receiveFromClient();
 			}
 		}else {
 			System.out.println("ERROR: Unknown TID.");
@@ -218,23 +230,15 @@ public class RequestHandler extends Thread{
 	 * 	IN: block number
 	 * */
 	public void sendACKPacket(int blockNum) {
-			//	Create byte array and set head bytes
-			byte[] sendData = new byte[4];
-			sendData[0] = 0;
-			sendData[1] = 4;
-			sendData[2] = (byte)(blockNum / 256);
-			sendData[3] = (byte)(blockNum % 256);
+		
+		//	Create byte array and set head bytes
+		byte[] sendData = new byte[4];
+		sendData[0] = 0;
+		sendData[1] = 4;
+		sendData[2] = (byte)(blockNum / 256);
+		sendData[3] = (byte)(blockNum % 256);
 
-			sendPacket = new DatagramPacket(sendData, sendData.length,
-					myPacket.getAddress(), myPacket.getPort());
-			//	Send packet
-			try {
-				// displaySend(sendPacket);
-				sendReceiveSocket.send(sendPacket);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
+		sendPacket(sendData);
 	}
 	
 	/*
@@ -255,6 +259,12 @@ public class RequestHandler extends Thread{
 		for(int i = 0; i < data.length; i++) {
 			sendData[4 + i] = data[i];
 		}
+		
+		sendPacket(sendData);
+	}
+	
+	public void sendPacket(byte[] sendData) {
+		
 		sendPacket = new DatagramPacket(sendData, sendData.length,
 				myPacket.getAddress(), myPacket.getPort());
 		//	Send packet
@@ -291,7 +301,7 @@ public class RequestHandler extends Thread{
 
 		//	Send packet
 		try {
-			// displaySend(sendPacket);
+			displaySend(sendPacket);
 			sendReceiveSocket.send(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -299,12 +309,27 @@ public class RequestHandler extends Thread{
 		}
 	}
 	
-	public void receiveFromClient() {
+	public void receiveFromClient() throws IOException {
+		
+		int terminate = 0;
+		sendReceiveSocket.setSoTimeout(3000);
+		
 		try {
 			sendReceiveSocket.receive(myPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+		} catch (SocketTimeoutException e) {
+			terminate += 1;
+			System.out.println("Time out " + terminate + ".");
+			if(terminate == TIMEOUTMAX) {
+				System.out.println(ID + "ERROR: No Response From Client, Disconnected.");
+				return;
+			}
+			if(currentRequest.equals("WRITE")) {
+				System.out.println("Resending...");
+				sendReceiveSocket.send(sendPacket);
+			}else {
+				System.out.println("Waiting...");
+			}
+			receiveFromClient();
 		}
 		
 		handleRequest();
@@ -314,5 +339,13 @@ public class RequestHandler extends Thread{
 		System.out.println("ERROR packet Received.");
 		System.out.println("Client ERROR : " + msg);
 		System.out.println(ID + "Disconnected.");
+	}
+	
+	public void displaySend(DatagramPacket packet) {
+		System.out.println(ID + "\tSending packet...");
+		System.out.println(ID + "\tDestination:\t" + packet.getAddress());
+		System.out.println(ID + "\tPort:\t" + packet.getPort());
+		System.out.println(ID + "\tType:\t" + TYPES[packet.getData()[1]]);
+		System.out.println(ID + "\tLength:\t" + packet.getData().length);
 	}
 }
