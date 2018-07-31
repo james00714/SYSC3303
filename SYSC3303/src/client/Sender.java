@@ -1,6 +1,6 @@
 /*
  * Prepare and send the packet after UI in the client class
-*/
+ */
 package client;
 
 import java.io.*;
@@ -12,8 +12,9 @@ public class Sender {
 	private DatagramPacket receivePacket, sendPacket;
 	private FileHandler fileHandler;
 	private RequestParser RP;
-	private int blockNumber = 0, port, finalBlock;
+	private int blockNumber = 0, port, finalBlock, TID;
 	private String filename;
+	private static final int TIMEOUTMAX = 4;
 
 	public Sender(Client c){
 		this.c = c;
@@ -28,54 +29,69 @@ public class Sender {
 
 	/*
 	 * Receive packet
-	*/
+	 */
 	public void Receiver () throws IOException{
 		System.out.println("Client: waiting a packet...");
 		byte data[] = new byte[1024];
 		receivePacket = new DatagramPacket(data, data.length);
 
+		int end = 0;
+		sendReceiveSocket.setSoTimeout(3000);
+
+
 		try {
 			sendReceiveSocket.receive(receivePacket);
+			TID = receivePacket.getPort();
 
-		} catch(IOException e) {
-			e.printStackTrace();
-			System.exit(1);
+		} catch(SocketTimeoutException e) {
+			//e.printStackTrace();
+			//System.exit(1);
+			end++;
+			System.out.println("Timeout "+ end + " time(s)");
+
+			if(end == TIMEOUTMAX) {
+				System.out.println("ERROR: No Response From Client "+TID+" , closing transmission now.");
+				return;
+			}
+			Receiver();
 		}
-		
+
 		PrintReceiver(receivePacket);
 		ReceiveHandler(receivePacket);
-
 	}
 
 	/*
 	 * Handle received packet and go to corresponding handle function
-	*/
+	 */
 	public void ReceiveHandler (DatagramPacket receivePacket) throws IOException{
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
-		
-		switch (RP.getType()) {
-		case 3:	DATA(receivePacket);
-		break;
-		case 4:	ACK(receivePacket);
-		break;
-		case 5:	ERR();
-		break;
+
+		if (receivePacket.getPort() != TID) {
+			System.out.println("Unknown TID error");
+			SendErrorPacket(4, "Unknown transfer ID");
+			Receiver();	
+		}else {
+			switch (RP.getType()) {
+			case 3:	DATA(receivePacket);
+			break;
+			case 4:	ACK(receivePacket);
+			break;
+			case 5:	ERR();
+			break;
+			}
 		}
 	}
 
 	/*
 	 * Deal with received DATA packet, check the block number 
-	*/
+	 */
 	public void DATA (DatagramPacket receivePacket) throws IOException{
+		int resend = 0;
 		System.out.println("Received Data packet.");
 		byte [] send = new byte [4];
 		int blockNum = RP.getBlockNum();
 		int length = receivePacket.getLength();
-		
-	/*	if (RP.getBlockNum() == 0) {
-			TID = receivePacket.getPort();
-		}*/
-		
+
 		if (blockNum == blockNumber){
 			if(blockNum == 1) {
 				fileHandler = new FileHandler();
@@ -102,32 +118,31 @@ public class Sender {
 					}
 				}
 			}
-		}	
-		else {
-			System.out.println("Error, block number don't match");
+			//check delay, duplicate by bk number
+		}else if (blockNum < blockNumber || blockNum == blockNumber) {
+			//Re-try 4 times
+			if (resend < 4) {
+				System.out.println("packet bk number "+blockNum+" VS current bk number "+ blockNumber+"");
+				System.out.println("Packet already received (duplicated), Resend ACK packet");
+				Resend(blockNumber++);
+				resend++;
+			}else {
+				System.out.println("Resending");
+			}
+		}else{
+			System.out.println("Error bk number, lololololololol");
 		}
 	}
 
+
 	/*
 	 * Deal with received ACK packet
-	*/
+	 */
 	public void ACK (DatagramPacket receivePacket) throws IOException{
 		System.out.println("Received ACK packet.");
 		byte [] send; 
 		int blockNum = RP.getBlockNum();
-		
-		/*if (RP.getBlockNum() == 0) {
-			TID = receivePacket.getPort();
-		}*/
-		
-	/*	if (receivePacket.getPort() != TID) {
-	 * System.out.println("Unknown TID error");		
-	 * //send error packet
-	 * }else {
-		
-			
-		}*/
-		
+
 		if (blockNum == blockNumber){
 			if(finalBlock == blockNum) {
 				System.out.println("Transfer Complete");
@@ -150,33 +165,42 @@ public class Sender {
 				}
 				Receiver();
 			}
-			
-		}	
-		else{
+
+		}else if (blockNum < blockNumber || blockNum == blockNumber) {
+			System.out.println("Duplicate ACK packet received");
+			System.out.println("Good bye Sorcerer's Apprentice Bug :heart");
+		}else{
 			System.out.println("Error");
 			System.out.println("Invalid block received");;
 		}	
 	}
-	
+
 	/*
 	 * Deal with received error packet
-	*/
+	 */
 	public void ERR (){
 		System.out.println("Received Error Packet.");
 		System.out.println("Error code: " + RP.getErrorCode());
 		System.out.println("Error Message: " + RP.getErrorMsg());
-		
 	}
-	
+
+	//resend ack packet
+	public void Resend (int BKNumber) {
+		byte [] send = new byte [4];
+		send[0] = 0;
+		send[1] = 4;
+		send[2] = (byte)(BKNumber/256);
+		send[3] = (byte)(BKNumber%256);
+		SendPacket (send);
+	}
 
 	/*
 	 *	Method to send error packet with code and message
 	 * 	In: error code, error message
 	 * */
 	public void SendErrorPacket(int errorCode, String msg){
-		
 		System.out.println("Sending error packet, code " + errorCode);
-		
+
 		byte[] sendData = new byte[5 + msg.length()];
 		byte[] msgData = msg.getBytes();
 		sendData[0] = 0;
@@ -187,7 +211,7 @@ public class Sender {
 			sendData[4 + i] = msgData[i];
 		}
 		sendData[sendData.length - 1] = 0;
-		
+
 		sendPacket = new DatagramPacket(sendData, sendData.length,
 				receivePacket.getAddress(), receivePacket.getPort());
 
@@ -203,7 +227,7 @@ public class Sender {
 
 	/*
 	 * Send packets
-	*/
+	 */
 	public void SendPacket(byte [] packet) {
 		//		System.out.println("Client: sending a packet...");
 		if(receivePacket == null) {
@@ -217,14 +241,13 @@ public class Sender {
 		}else {
 			sendPacket = new DatagramPacket(packet, packet.length,
 					receivePacket.getAddress(), receivePacket.getPort());
-				
 		}
-			
+
 		/*
 		try {
 			Thread.sleep(500);
 		}catch(InterruptedException e){}
-		*/
+		 */
 		//		Send packet
 		try {
 			// displaySend(sendPacket);
@@ -233,20 +256,19 @@ public class Sender {
 			e.printStackTrace();
 			System.exit(1);
 		}
-
 		PrintSender(sendPacket);
 	}
 
 	/*
 	 * Handle user request from UI
-	*/
+	 */
 	public void  RequestHandler(String request, String fileName) throws IOException{
 		byte [] send = null;
 		byte [] length = fileName.getBytes();
 		filename = fileName;
 		String mode = "netascii";
 		byte [] length2 = mode.getBytes();
-		
+
 		send = new byte [4 +length.length + length2.length];
 		send[0] = 0;
 		if(request.equals("1")) {
@@ -273,16 +295,14 @@ public class Sender {
 		for (int j = 0; j<length2.length; j++) {
 			send[3+length.length+j] = length2[j];
 		}
-		
+
 		send[3+length.length + length2.length] = 0;
-		
+
 		System.out.println("printing out byte array");
 		for (int i = 0; i < send.length; i++) {
 			System.out.println(send[i]);
 		}
-
 		SendPacket (send);
-
 	}
 
 
@@ -300,7 +320,7 @@ public class Sender {
 
 	/*
 	 * Print sended packet
-	*/
+	 */
 	public void PrintSender (DatagramPacket sendPacket) {
 		Verbose v = new Verbose();
 		Quiet q = new Quiet();
@@ -315,18 +335,18 @@ public class Sender {
 
 	/*
 	 * Close the sockeet
-	*/
+	 */
 	public void Close (){
 		sendReceiveSocket.close();
 	}
-	
+
 	/*
 	 * Start the client
-	*/
+	 */
 	public void start (Client c, int portNum) throws IOException{
 		System.out.println("Normal mode selected");
 		receivePacket = null;
-		
+
 		this.port = portNum;
 		this.RequestHandler(c.getRequest(), c.getFileName());
 	}

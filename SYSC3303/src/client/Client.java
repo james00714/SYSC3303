@@ -117,7 +117,6 @@ public class Client {
 			System.out.println("File exist.");
 			return true;
 		}
-
 		return false;
 	}
 
@@ -130,7 +129,6 @@ public class Client {
 		}*/
 
 		try {
-
 			FileInputStream permit = new FileInputStream(new File ("src\\client\\files\\" + fileName));
 			byte [] fileBuffer = new byte[512];	
 			permit.read(fileBuffer);
@@ -145,9 +143,7 @@ public class Client {
 				e.printStackTrace();
 			}
 			return false;
-
 		}
-
 		return true;
 	}
 
