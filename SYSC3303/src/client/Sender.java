@@ -119,11 +119,11 @@ public class Sender {
 				}
 			}
 			//check delay, duplicate by bk number
-		}else if (blockNum < blockNumber || blockNum == blockNumber) {
+		}else if (blockNum < blockNumber) {
 			//Re-try 4 times
 			if (resend < 4) {
 				System.out.println("packet bk number "+blockNum+" VS current bk number "+ blockNumber+"");
-				System.out.println("Packet already received (duplicated), Resend ACK packet");
+				System.out.println("Packet already received (duplicated), Resending ACK packet");
 				Resend(blockNumber++);
 				resend++;
 			}else {
@@ -165,13 +165,14 @@ public class Sender {
 				}
 				Receiver();
 			}
-
-		}else if (blockNum < blockNumber || blockNum == blockNumber) {
-			System.out.println("Duplicate ACK packet received");
+		}else if (blockNum < blockNumber) {
+			System.out.println("Duplicate ACK packet received (delayed)");
 			System.out.println("Good bye Sorcerer's Apprentice Bug :heart");
+			SendErrorPacket(4, "Illegal TFTP operation");
 		}else{
-			System.out.println("Error");
-			System.out.println("Invalid block received");;
+			System.out.println("Error, Invalid block received");
+			System.out.println("packet bk number "+blockNum+" VS current bk number "+ blockNumber+"");
+			SendErrorPacket(4, "Illegal TFTP operation");
 		}	
 	}
 
