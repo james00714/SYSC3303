@@ -47,7 +47,7 @@ public class ESThread extends Thread{
 	/*
 	 * Modify the packet by given choice in the UI
 	*/
-	public byte[] Modify(DatagramPacket packet, RequestParser RP, UI ui) {
+	/*public byte[] Modify(DatagramPacket packet, RequestParser RP, UI ui) {
 		int choice = ui.mainMenu();
 		byte[] sendData = null;
 		if(choice == 0) {
@@ -129,7 +129,7 @@ public class ESThread extends Thread{
 		}
 
 		return sendData;
-	}
+	}*/
 
 	/*
 	 * Send the packet
@@ -166,19 +166,54 @@ public class ESThread extends Thread{
 		}	
 		RequestParser RP = new RequestParser();
 		RP.parseRequest(receiveClientPacket.getData(), receiveClientPacket.getLength());
-		UI myUI = new UI(RP);
+		UI myUI = new UI();
+		myUI.errorMainMenu();
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
+		if(myUI.getErrorType()==0) {
+			
+		}else if(myUI.getErrorType()==1) {
+			if(myUI.getTransError()==1) {
+				System.out.println("Lost the packet, no sending");
+				byte data[] = new byte[1024];
+				receiveClientPacket = new DatagramPacket(data, data.length);
+			}else if(myUI.getTransError()==2) {
+				try {
+					System.out.println("Delay the packet for 4 seconds");
+					Thread.sleep(4000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}else if(myUI.getTransError()==3) {
+				System.out.println("Duplicate the packet");
+				byte[]sendData = new byte[receiveClientPacket.getLength()];
+				for(int i = 0; i < receiveClientPacket.getLength();i++) {
+					sendData[i]=receiveClientPacket.getData()[i];
+				}
+				if(serverPort == -1) {
+					send(sendData,clientAddr, 69);
+				}else {
+					send(sendData,clientAddr, serverPort);
+				}
+			}
+		}
+		
+		byte[]sendData = new byte[receiveClientPacket.getLength()];
+		for(int i = 0; i < receiveClientPacket.getLength();i++) {
+			sendData[i]=receiveClientPacket.getData()[i];
+		}
+		
 		if(serverPort == -1) {
-			send(Modify(receiveClientPacket, RP, myUI),clientAddr, 69);
+			send(sendData,clientAddr, 69);
 		}else {
-			send(Modify(receiveClientPacket, RP, myUI),clientAddr, serverPort);
+			send(sendData,clientAddr, serverPort);
 		}
 		////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////
 		receiveFromServer();
 	}
-
 	/*
 	 * Receive packet from server
 	*/
@@ -196,8 +231,48 @@ public class ESThread extends Thread{
 		}
 		RequestParser RP = new RequestParser();
 		RP.parseRequest(receiveServerPacket.getData(), receiveServerPacket.getLength());
-		UI myUI = new UI(RP);
-		send(Modify(receiveServerPacket, RP, myUI), clientAddr, clientPort);
+		
+		UI myUI = new UI();
+		myUI.errorMainMenu();
+		
+		if(myUI.getErrorType()==0) {
+			
+		}else if(myUI.getErrorType()==1) {
+			if(myUI.getTransError()==1) {
+				try {
+					System.out.println("Lost the packet, no sending");
+					sendReceiveSocket.receive(receiveServerPacket);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}else if(myUI.getTransError()==2) {
+				try {
+					System.out.println("Delay the packet for 4 seconds");
+					Thread.sleep(4000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}else if(myUI.getTransError()==3) {
+				System.out.println("Duplicate the packet");
+				
+				byte[]sendData = new byte[receiveServerPacket.getLength()];
+				for(int i = 0; i < receiveServerPacket.getLength();i++) {
+					sendData[i]=receiveServerPacket.getData()[i];
+				}
+				
+				send(sendData,clientAddr, clientPort);
+				
+			}
+		}
+		
+		byte[]sendData = new byte[receiveServerPacket.getLength()];
+		for(int i = 0; i < receiveServerPacket.getLength();i++) {
+			sendData[i]=receiveServerPacket.getData()[i];
+		}
+		send(sendData, clientAddr, clientPort);
 		receiveClientPacket = null;
 		receiveFromClient();
 	}

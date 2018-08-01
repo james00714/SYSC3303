@@ -96,10 +96,5 @@ public class Listener extends Thread{
 		int len = receivePacket.getLength();
 		System.out.println("Length: " + len);
 		
-		System.out.println("Length: " + len);
-		for(int i = 0; i < len; i ++){
-			System.out.println(receivePacket.getData()[i]);
-		}
-		
 	}
 }

@@ -22,6 +22,7 @@ public class RequestHandler extends Thread{
 	private DatagramPacket myPacket, sendPacket;
 	private DatagramSocket sendReceiveSocket;
 	private int length, finalBlock, TID;
+	private int terminate = 0;
 	private Client myClient;
 	private String ID, currentRequest;
 	private InetAddress TAddr;
@@ -320,14 +321,15 @@ public class RequestHandler extends Thread{
 	
 	public void receiveFromClient() throws IOException {
 		
-		int terminate = 0;
 		sendReceiveSocket.setSoTimeout(3000);
 		
 		try {
 			sendReceiveSocket.receive(myPacket);
+			terminate = 0;
+			handleRequest();
 		} catch (SocketTimeoutException e) {
 			terminate += 1;
-			System.out.println("Time out " + terminate + ".");
+			System.out.println(ID + "Time out " + terminate + ".");
 			if(terminate == TIMEOUTMAX) {
 				System.out.println(ID + "ERROR: No Response From Client, Disconnected.");
 				myClient.close();
@@ -342,8 +344,6 @@ public class RequestHandler extends Thread{
 			}
 			receiveFromClient();
 		}
-		
-		handleRequest();
 	}
 	
 	public void handleERROR(int code, String msg) {
@@ -356,7 +356,7 @@ public class RequestHandler extends Thread{
 		System.out.println(ID + "\tSending packet...");
 		System.out.println(ID + "\tDestination:\t" + packet.getAddress());
 		System.out.println(ID + "\tPort:\t" + packet.getPort());
-		System.out.println(ID + "\tType:\t" + TYPES[packet.getData()[1]]);
+		System.out.println(ID + "\tType:\t" + TYPES[packet.getData()[1] - 1]);
 		System.out.println(ID + "\tLength:\t" + packet.getData().length);
 	}
 }

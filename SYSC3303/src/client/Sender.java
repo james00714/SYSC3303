@@ -1,5 +1,5 @@
 /*
- * Prepare and send the packet after UI in the client class
+j * Prepare and send the packet after UI in the client class
  */
 package client;
 
@@ -12,7 +12,7 @@ public class Sender {
 	private DatagramPacket receivePacket, sendPacket;
 	private FileHandler fileHandler;
 	private RequestParser RP;
-	private int blockNumber = 0, port, finalBlock, TID;
+	private int blockNumber = 0, port, finalBlock, TID, end = 0;
 	private String filename;
 	private static final int TIMEOUTMAX = 4;
 
@@ -34,15 +34,15 @@ public class Sender {
 		System.out.println("Client: waiting a packet...");
 		byte data[] = new byte[1024];
 		receivePacket = new DatagramPacket(data, data.length);
-
-		int end = 0;
 		sendReceiveSocket.setSoTimeout(3000);
 
 
 		try {
 			sendReceiveSocket.receive(receivePacket);
 			TID = receivePacket.getPort();
-
+			end = 0;
+			PrintReceiver(receivePacket);
+			ReceiveHandler(receivePacket);
 		} catch(SocketTimeoutException e) {
 			//e.printStackTrace();
 			//System.exit(1);
@@ -50,14 +50,12 @@ public class Sender {
 			System.out.println("Timeout "+ end + " time(s)");
 
 			if(end == TIMEOUTMAX) {
-				System.out.println("ERROR: No Response From Client "+TID+" , closing transmission now.");
+				end = 0;
+				System.out.println("ERROR: No Response From Server, closing transmission.");
 				return;
 			}
 			Receiver();
-		}
-
-		PrintReceiver(receivePacket);
-		ReceiveHandler(receivePacket);
+		}	
 	}
 
 	/*
