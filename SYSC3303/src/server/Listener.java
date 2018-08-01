@@ -11,6 +11,7 @@ public class Listener extends Thread{
 	
 	private DatagramSocket sendReceiveSocket;
 	private DatagramPacket receivePacket;
+	
 	private boolean running = true;		// turn to false if needs to close listener 
 	
 	public Listener(int port) {		
@@ -80,6 +81,8 @@ public class Listener extends Thread{
 		running = false;
 		sendReceiveSocket.close();	
 	}
+	
+	
 	
 	/*
 	*	Method to display information related to the data received

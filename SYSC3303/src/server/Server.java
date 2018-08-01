@@ -42,6 +42,13 @@ public class Server{
 	 * */
 	public void stopServer() {
 		myListener.stopRunning();  // Stop listener
+		while(Client.getClientsSize() != 0) {
+			try {
+				wait();	
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		System.out.println("Server has been terminated.");
 	}
 	
