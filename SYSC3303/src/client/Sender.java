@@ -78,7 +78,7 @@ public class Sender {
 	public void ReceiveHandler (DatagramPacket receivePacket) throws IOException{
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
 
-		if (receivePacket.getPort() != TID) {
+		if (receivePacket.getPort() != TID && receivePacket.getPort() != -1) {
 			System.out.println("Unknown TID error");
 			SendErrorPacket(4, "Unknown transfer ID");
 		}else {

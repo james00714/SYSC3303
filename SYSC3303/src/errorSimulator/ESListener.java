@@ -1,4 +1,4 @@
-package ES;
+package errorSimulator;
 
 import java.io.*;
 import java.net.*;
