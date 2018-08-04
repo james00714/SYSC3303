@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class ErrorSimulator {
 	
 	private Scanner scan;
-	private String ec,tc,pc, bc, dc;  
+	private String ec, tc, pc, bc, dc;  
 	private ESListener listener;
 	private int errorType,errorChoice;
 	private int packetChoice, blockChoice, delayChoice;
@@ -23,7 +23,7 @@ public class ErrorSimulator {
 		System.out.println("----------Error Selection----------");
 		System.out.println("    0. Normal Operation");
 		System.out.println("    1. Transmission Error");
-		System.out.println("    2. Error Codes (1-6)");
+		System.out.println("    2. Error Codes (4 or 5)");
 		System.out.println(">>>>>>>> input quit to exit this program");
 		
 		ec = scan.next();
@@ -44,8 +44,7 @@ public class ErrorSimulator {
 					break;
 				case 2: 
 					listener.setErrorType(errorType); 
-					//////////////////
-					//////////////////
+					packetSelection();
 					break;
 				default: 
 					System.out.println("Invalid input, please try again.");
@@ -83,7 +82,74 @@ public class ErrorSimulator {
 				System.out.println("Invalid input, please try again.");
 				transmissionError();
 		}
+	}
+	
+	public void errorCodeError() {
 		
+		if(packetChoice == 1 || packetChoice == 2) {
+			System.out.println("---------- Error Code Error ----------");
+			System.out.println("    1. Invalid Mode 		 (Error Code 4)");
+			System.out.println("    2. Invalid Filename 	 (Error Code 4)");
+			System.out.println("    3. Invalid Packet Size   (Error Code 4)");
+			System.out.println("    4. Invalid Packet Format (Error Code 4)");
+			System.out.println("    5. Unknown Transfer ID   (Error Code 5)");
+			System.out.println("    6. Back to Error main menu");
+			System.out.println(">>>>>>>> input quit to exit this program");
+			
+			ec = scan.next();
+			if(ec.equals("quit")) {
+				stop();
+				return;
+			}
+			
+			try {
+				errorChoice = Integer.valueOf(ec);
+				if(errorChoice < 0 || errorChoice >6) {
+					System.out.println("Invalid input, please try again."); 
+					errorCodeError();
+				}else {		
+					if (errorChoice == 6) return;
+					listener.setErrorChoice(errorChoice);
+					listener.confirmChange();
+				}
+			}catch(NumberFormatException e) {
+				System.out.println("Invalid input, please try again.");
+				errorCodeError();
+			}
+		}else {
+			System.out.println("---------- Error Code Error ----------");
+			System.out.println("    1. Invalid Opcode 		 (Error Code 4)");
+			System.out.println("    2. Invalid Mode   		 (Error Code 4)");
+			System.out.println("    3. Invalid Block Number  (Error Code 4)");
+			System.out.println("    4. Invalid Filename 	 (Error Code 4)");
+			System.out.println("    5. Invalid Packet Size   (Error Code 4)");
+			System.out.println("    6. Invalid Packet Format (Error Code 4)");
+			System.out.println("    7. Unknown Transfer ID   (Error Code 5)");
+			System.out.println("    8. Back to Error main menu");
+			System.out.println(">>>>>>>> input quit to exit this program");
+			
+			ec = scan.next();
+			if(ec.equals("quit")) {
+				stop();
+				return;
+			}
+			
+			try {
+				errorChoice = Integer.valueOf(ec);
+				if(errorChoice < 0 || errorChoice >8) {
+					System.out.println("Invalid input, please try again."); 
+					errorCodeError();
+				}else {		
+					if (errorChoice == 8) return;
+					listener.setErrorChoice(errorChoice);
+					listener.confirmChange();
+				}
+			}catch(NumberFormatException e) {
+				System.out.println("Invalid input, please try again.");
+				errorCodeError();
+			}
+			
+		}
 		
 	}
 	public void delaySelection() {
@@ -146,7 +212,9 @@ public class ErrorSimulator {
 					listener.setPacketChoice(packetChoice);
 					if(errorChoice == 2) {
 						delaySelection();
-					}else {	
+					}else if(errorType == 2){
+						errorCodeError();	
+					}else {
 						listener.confirmChange();
 					}
 				}
@@ -179,6 +247,8 @@ public class ErrorSimulator {
 			}else {
 				if(errorChoice == 2) {
 					delaySelection();
+				}else if(errorType ==2){
+					errorCodeError();
 				}else {
 					listener.setBlockChoice(blockChoice);
 					listener.confirmChange();

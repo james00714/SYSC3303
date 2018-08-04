@@ -26,8 +26,14 @@ public class Client {
 		myFH = FH;
 	}
 	
-	public synchronized void addToClients() {
-		activeClients.add(this);
+	public synchronized static boolean addToClients(Client c) {
+		if(findSameClient(c) == false) {
+			activeClients.add(c);
+			return true;
+		}else {
+			return false;
+		}
+		
 	}
 	
 	public synchronized void removeFromClients() {
@@ -35,10 +41,10 @@ public class Client {
 		notifyAll();
 	}
 	
-	public synchronized static boolean findClientByPacket(DatagramPacket receivePacket) {
+	public static boolean findSameClient(Client client) {
 		for(Client c : activeClients) {
-			if(c.getAddress().equals(receivePacket.getAddress()) && 
-					c.getPort() == receivePacket.getPort()) return true;
+			if(c.getAddress().equals(client.getAddress()) && 
+					c.getPort() == client.getPort()) return true;
 		}
 		return false;
 	}

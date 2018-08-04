@@ -170,10 +170,8 @@ public class Client {
 		}else {
 			if (mode.equals("1")){
 				s.start(this, 69);
-				s.Receiver();
 			}else if(mode.equals("2")){
 				s.start(this, 23);
-				s.Receiver();	
 			}else {
 				System.out.println("Invalid mode input, please try again.");
 			}

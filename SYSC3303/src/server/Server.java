@@ -35,6 +35,7 @@ public class Server{
 				System.out.println("Invalid input.");
 			}
 		}
+		System.out.println("Server has been terminated.");
 	}
 
 	/*
@@ -48,8 +49,7 @@ public class Server{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
-		System.out.println("Server has been terminated.");
+		}	
 	}
 	
 	//	Server starts here

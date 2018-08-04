@@ -58,6 +58,7 @@ public class FileHandler {
 					fileBuffer = tempBuffer;
 				}
 			}		
+			if(count == -1) return new byte[0];
 		}catch (IOException e) {
 			e.printStackTrace();
 		}	
