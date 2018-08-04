@@ -1,291 +1,208 @@
-/*
- * Thread class for error simulator
-*/
 package errorSimulator;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.*;
 
 public class ESThread extends Thread{
 
-	private DatagramSocket sendReceiveSocket;	
-	private DatagramPacket receiveServerPacket, receiveClientPacket, sendPacket;
+	private DatagramPacket receivedPacket, sendPacket;
+	private DatagramSocket receiveSendSocket;
 
-	private InetAddress clientAddr; //serverAddr; for multi-pc
-	private int clientPort, serverPort;
+	private int errorType;
+	private int errorChoice;
+	private int errorPacket;
+	private int blockChoice;
+	private int delayChoice;
+	private InetAddress clientAddress;
+	private int clientPort;
+	private int serverPort = 69;
+	private RequestParser rp;
+	private int ID;
 
-	public ESThread(DatagramPacket received) {
+	public ESThread(int errorType, int errorChoice, int errorPacket, int blockChoice, int delayChoice, DatagramPacket received) {
+		//		byte[] sendData = new byte[1024];
 
-		byte[] data1 = new byte[1024];
-		byte[] data2 = new byte[1024];
+		//		sendPacket = new DatagramPacket(sendData, sendData.length);
 
-		receiveServerPacket = new DatagramPacket(data1, data1.length);
-		receiveClientPacket = new DatagramPacket(data2, data2.length);
-
-		clientAddr = received.getAddress();
-		clientPort = received.getPort();
-		//serverAddr = null;
-		serverPort = -1;
-
-		this.receiveClientPacket = received;
-
-		try{
-			sendReceiveSocket = new DatagramSocket();
-		}catch (SocketException se){
-			se.printStackTrace();
+		this.errorType = errorType;
+		this.errorChoice = errorChoice;
+		this.errorPacket = errorPacket;
+		this.blockChoice = blockChoice;
+		this.delayChoice = delayChoice;
+		this.receivedPacket = received;
+		this.clientAddress = receivedPacket.getAddress();
+		this.clientPort = receivedPacket.getPort();
+		//temp
+		try {
+			receiveSendSocket = new DatagramSocket();
+		} catch (SocketException e) {
+			e.printStackTrace();
 			System.exit(1);
 		}
+		rp = new RequestParser();
+		ID = receiveSendSocket.getLocalPort();
+
+		System.out.println("Created a thread");
 
 	}
 
 	public void run() {
-
-		receiveFromClient();
-
+		System.out.println("Thread is running...");
+		
+		if(!ifClient(receivedPacket)) {
+			if(serverPort == -1) 
+				this.serverPort = receivedPacket.getPort();
+		}
+		
+		System.out.println("Packet received:");
+		printPacketInfo(receivedPacket);
+		tryError(receivedPacket);
 	}
 
-	/*
-	 * Modify the packet by given choice in the UI
-	*/
-	/*public byte[] Modify(DatagramPacket packet, RequestParser RP, UI ui) {
-		int choice = ui.mainMenu();
-		byte[] sendData = null;
-		if(choice == 0) {
-			sendData = new byte[packet.getLength()];
-			for(int i = 0; i < packet.getLength();i++) {
-				sendData[i] = packet.getData()[i];
-			}
-			//send(sendData, port);
-		}else if(choice == 1) {
-			int newOp = ui.askOpCode();
-			sendData = new byte[packet.getLength()];
-			for(int i = 0; i < packet.getLength();i++) {
-				sendData[i] = packet.getData()[i];
-			}
-			sendData[1] = (byte) newOp;
-			//send(sendData, port);		
-		}else if(choice == 2) {
-			int second = ui.type2();
-			if (second == 1) {
-				byte [] fileName = ui.askFileName();
-				sendData = new byte[4 + fileName.length];
-				sendData[0] = 0;
-				sendData[1] = 1;
-				for (int i = 0; i < fileName.length; i++) {
-					sendData[2+i] = fileName[i];
-				}
-				sendData[3+fileName.length] = 0;
+	private void tryError(DatagramPacket receivedPacket){
+		rp.parseRequest(receivedPacket.getData(), receivedPacket.getLength());
 
-			}else if (second == 2) {
-				sendData = new byte[packet.getLength()];
-				for(int i = 0; i < packet.getLength();i++) {
-					sendData[i] = packet.getData()[i];
-				}
-				int Bk = ui.askBkNumber();
-				sendData[2] = (byte) (Bk / 256);
-				sendData[3] = (byte) (Bk % 256);
-
-			}else if (second == 3) {
-				sendData = new byte[packet.getLength()];
-				for(int i = 0; i < packet.getLength();i++) {
-					sendData[i] = packet.getData()[i];
-				}
-				int code = ui.askErrCode();
-				sendData[1] = (byte) code;
-			}else {
-				System.out.println("Choice 2 Error.");
-			}
-
-		}else if(choice == 3) {
-			int third = ui.type3();
-			//data
-			if (third == 1) {
-				byte [] data = ui.askData();
-				sendData = new byte[4+data.length];
-				for(int i = 0; i < 4;i++) {
-					sendData[i] = packet.getData()[i];
-				}
-				
-				for (int j = 0; j < data.length; j++) {
-					sendData[4 + j] = data[j];
-				}
-				
-			}else if (third == 2) {
-				byte [] msg = ui.askErrMSG();
-				sendData = new byte[4+msg.length];
-				for(int i = 0; i < 4 ;i++) {
-					sendData[i] = packet.getData()[i];
-				}
-				
-				for (int j = 0; j < msg.length; j++) {
-					sendData[4+j] = msg[j];
-				}
-					sendData[4+msg.length] = 0;
-			}else {
-				System.out.println("Choice 3 Error");
+		if(ifError(receivedPacket)) {
+			System.out.println("Target packet received, making error...");
+			if(errorType == 1) {
+				makeTransmissionError(receivedPacket);
+				errorType = 0;
+				receive();
+			}else if(errorType == 2) {
+				////////////////////
+				///////////////////
 			}
 		}else {
-			System.out.println("Error");
+			
+			transferPacket(receivedPacket);
+			receive();
+		}
+	}
+
+	private boolean ifError(DatagramPacket receivedPacket) {
+		if(errorType == 0) return false;
+		
+		if(errorPacket == rp.getType()) {
+			if(errorPacket != 3 && errorPacket != 4) {
+				return true;
+			}else {
+				if(blockChoice == rp.getBlockNum()) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public void errorCode() {
+
+		switch(errorChoice) {
+		case 1: System.out.println("File not found"); break;
+		case 2: System.out.println("Access violation"); break;
+		case 3: System.out.println("Disk full or allocation exceeded"); break;
+		case 4: System.out.println("Illegal TFTP operation"); break;
+		case 5: System.out.println("Unknown transfer ID"); break;
+		case 6: System.out.println("File already exists"); break;
+		default: System.out.println("Oops, something is wrong"); break;
 		}
 
-		return sendData;
-	}*/
+		switch(errorPacket) {
+		case 1: System.out.println("Modify RRQ"); break;
+		case 2: System.out.println("Modify WRQ"); break;
+		case 3: System.out.println("Modify DATA"); break;
+		case 4: System.out.println("Modify ACK"); break;
+		case 5: System.out.println("Modify ERROR"); break;
+		default: System.out.println("Oops, something is wrong"); break;
+		}
+	}
 
-	/*
-	 * Send the packet
-	*/
-	public void send(byte[] data, InetAddress addr, int port) {
-
-		sendPacket = new DatagramPacket(data, data.length,
-				addr, port);
+	public void sendPacket(DatagramPacket sendPacket) {
 
 		try {
-			sendReceiveSocket.send(sendPacket);
+			receiveSendSocket.send(sendPacket);
+			System.out.println("Error Simulator: Packet sent:");
+			printPacketInfo(sendPacket);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
 
-		displaySend(sendPacket);	
+	} 
+
+	public void receive() {
+		try {
+			receiveSendSocket.setSoTimeout(10000);
+		} catch (SocketException e1) {
+			e1.printStackTrace();
+		}
+		try {
+			System.out.println("Receving a packet...");
+			receiveSendSocket.receive(receivedPacket);
+
+			if(!ifClient(receivedPacket)) {
+				if(serverPort == 69) 
+					this.serverPort = receivedPacket.getPort();
+			}
+
+			System.out.println("Error Simulator: Packet received:");
+			printPacketInfo(receivedPacket);
+		}catch(SocketTimeoutException e1) {
+			System.out.println(ID + ": Timeout, closing thread.");
+			return;
+		}catch (IOException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		tryError(receivedPacket);
 	}
 
-	/*
-	 * Receive packet from client
-	*/
-	public void receiveFromClient() {
-		if(receiveClientPacket == null) {
-			byte data[] = new byte[1024];
-			receiveClientPacket = new DatagramPacket(data, data.length);
+	
+
+	private void makeTransmissionError(DatagramPacket receivedPacket) {
+		if(errorChoice == 1) {
+			System.out.println("Target packet has lost.");
+		}
+		else if(errorChoice == 2) {
+			System.out.println("Delaying... " + delayChoice + "ms");
 			try {
-				System.out.println("ES: Waiting for Client...");
-				sendReceiveSocket.receive(receiveClientPacket);
-			} catch (IOException e) {
+				Thread.sleep(delayChoice);
+			} catch (InterruptedException e) {
 				e.printStackTrace();
-				System.exit(1);
 			}
-		}	
-		RequestParser RP = new RequestParser();
-		RP.parseRequest(receiveClientPacket.getData(), receiveClientPacket.getLength());
-		UI myUI = new UI();
-		myUI.errorMainMenu();
-		////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////
-		if(myUI.getErrorType()==0) {
-			
-		}else if(myUI.getErrorType()==1) {
-			if(myUI.getTransError()==1) {
-				System.out.println("Lost the packet, no sending");
-				byte data[] = new byte[1024];
-				receiveClientPacket = new DatagramPacket(data, data.length);
-			}else if(myUI.getTransError()==2) {
-				try {
-					System.out.println("Delay the packet for 4 seconds");
-					Thread.sleep(4000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}else if(myUI.getTransError()==3) {
-				System.out.println("Duplicate the packet");
-				byte[]sendData = new byte[receiveClientPacket.getLength()];
-				for(int i = 0; i < receiveClientPacket.getLength();i++) {
-					sendData[i]=receiveClientPacket.getData()[i];
-				}
-				if(serverPort == -1) {
-					send(sendData,clientAddr, 69);
-				}else {
-					send(sendData,clientAddr, serverPort);
-				}
-			}
-		}
-		
-		byte[]sendData = new byte[receiveClientPacket.getLength()];
-		for(int i = 0; i < receiveClientPacket.getLength();i++) {
-			sendData[i]=receiveClientPacket.getData()[i];
-		}
-		
-		if(serverPort == -1) {
-			send(sendData,clientAddr, 69);
+			transferPacket(receivedPacket);
+		}else if(errorChoice == 3) {
+			System.out.println("Duplicating...");
+			transferPacket(receivedPacket);
+			transferPacket(receivedPacket);
 		}else {
-			send(sendData,clientAddr, serverPort);
+			System.out.println("invalid error choice");
 		}
-		////////////////////////////////////////////////////////
-		////////////////////////////////////////////////////////
-		receiveFromServer();
-	}
-	/*
-	 * Receive packet from server
-	*/
-	public void receiveFromServer() {
-		try {
-			System.out.println("ES: Waiting for server response...");
-			sendReceiveSocket.receive(receiveServerPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-		if(serverPort == -1) {
-			serverPort = receiveServerPacket.getPort();
-			//serverAddr = receiveServerPacket.getAddress();
-		}
-		RequestParser RP = new RequestParser();
-		RP.parseRequest(receiveServerPacket.getData(), receiveServerPacket.getLength());
-		
-		UI myUI = new UI();
-		myUI.errorMainMenu();
-		
-		if(myUI.getErrorType()==0) {
-			
-		}else if(myUI.getErrorType()==1) {
-			if(myUI.getTransError()==1) {
-				try {
-					System.out.println("Lost the packet, no sending");
-					sendReceiveSocket.receive(receiveServerPacket);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}else if(myUI.getTransError()==2) {
-				try {
-					System.out.println("Delay the packet for 4 seconds");
-					Thread.sleep(4000);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-			}else if(myUI.getTransError()==3) {
-				System.out.println("Duplicate the packet");
-				
-				byte[]sendData = new byte[receiveServerPacket.getLength()];
-				for(int i = 0; i < receiveServerPacket.getLength();i++) {
-					sendData[i]=receiveServerPacket.getData()[i];
-				}
-				
-				send(sendData,clientAddr, clientPort);
-				
-			}
-		}
-		
-		byte[]sendData = new byte[receiveServerPacket.getLength()];
-		for(int i = 0; i < receiveServerPacket.getLength();i++) {
-			sendData[i]=receiveServerPacket.getData()[i];
-		}
-		send(sendData, clientAddr, clientPort);
-		receiveClientPacket = null;
-		receiveFromClient();
 	}
 
-	/*
-	 * Print send packet
-	*/
-	public void displaySend(DatagramPacket sendPacket) {
-		System.out.println("ES : Sending packet:");
-		System.out.println("To host: " + sendPacket.getAddress());
-		System.out.println("Destination host port: " + sendPacket.getPort());
-		int len = sendPacket.getLength();
+	public void transferPacket(DatagramPacket receivedPacket) {
+		System.out.println("Passing packet received...");
+		if(ifClient(receivedPacket)) {
+			try {
+				sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), InetAddress.getLocalHost(), this.serverPort);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+			sendPacket(sendPacket);
+		}else {
+			sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), this.clientAddress, this.clientPort);
+			sendPacket(sendPacket);
+		}
+	}
+
+	public boolean ifClient(DatagramPacket receivedPacket) {
+		if(receivedPacket.getPort() == clientPort && receivedPacket.getAddress().equals(clientAddress)) return true;
+		return false;
+	}
+
+	public void printPacketInfo(DatagramPacket received){
+		System.out.println("Address: " + received.getAddress());
+		System.out.println("Port: " + received.getPort());
+		int len = received.getLength();
 		System.out.println("Length: " + len);
 	}
-
 }
