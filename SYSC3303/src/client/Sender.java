@@ -57,7 +57,6 @@ public class Sender {
 			if(end == TIMEOUTMAX) {
 				end = 0;
 				System.out.println("ERROR: No Response From Server, closing transmission.");
-
 				continueListen = false;
 				return;
 			}
@@ -119,6 +118,8 @@ public class Sender {
 					if (!InOperation(filename)) {
 						System.out.println("Access Violation");
 						SendErrorPacket(2, "Access Violation");
+						fileHandler.close();
+						continueListen = false;
 					}
 					else {
 						send[0] = 0;
