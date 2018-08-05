@@ -152,7 +152,7 @@ public class Sender {
 	}
 
 	public boolean InOperation (String fileName) {
-		File f = new File ("src\\client\\files\\" + fileName);
+		File f = new File (c.getLocation() + fileName);
 		if (f.canWrite()) {
 			return true;
 		}
