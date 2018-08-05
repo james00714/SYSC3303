@@ -15,6 +15,7 @@ public class FileHandler {
 	private FileOutputStream os;
 	private byte[] fileBuffer;
 	private RequestHandler RH;
+	private File f;
 
 	public FileHandler(RequestHandler requestHandler) {
 		RH = requestHandler;
@@ -32,7 +33,7 @@ public class FileHandler {
 		
 		//	Try loading the file
 		int count;
-		File f = new File(file);
+		f = new File(file);
 		if(!f.exists()) {
 			System.out.println("ERROR: File Not Found.");
 			RH.SendErrorPacket(1, "File not found");
@@ -76,6 +77,12 @@ public class FileHandler {
 	 * */
 	public byte[] readFile(){
 
+		if(!f.canRead()) {
+			System.out.println("ERROR: Access Violation.");
+			RH.SendErrorPacket(2, "Access violation");
+			return null;
+		}
+		
 		int count;
 		fileBuffer = new byte[512];
 		
@@ -125,18 +132,18 @@ public class FileHandler {
 			file = file.substring(index, file.length());
 		}
 		file = "src\\server\\files\\" + file;
-		File fileToWrite = new File(file);
+		f = new File(file);
 		
 		// File already exist
-		if(fileToWrite.exists()) {
+		if(f.exists()) {
 			System.out.println("ERROR: File already exists.");
 			RH.SendErrorPacket(6, "File already exists");
 			return false;
 		}
 		try{
-			fileToWrite.createNewFile();
+			f.createNewFile();
 			// set output stream to write file
-			os = new FileOutputStream(fileToWrite);		
+			os = new FileOutputStream(f);		
 		} catch (IOException e) {
 			
 			// Access denied
@@ -177,6 +184,13 @@ public class FileHandler {
 	public boolean writeFile(byte[] fileData){
 		
 		System.out.println("Writing file...");
+		
+		if(!f.canWrite()) {
+			System.out.println("ERROR: Access Violation.");
+			RH.SendErrorPacket(2, "Access violation");
+			return false;
+		}
+		
 		try{
 			os.write(fileData);
 			os.flush();	

@@ -24,7 +24,7 @@ public class RequestHandler extends Thread{
 	private int length, finalBlock, TID;
 	private int terminate = 0;
 	private Client myClient;
-	private String ID, currentRequest;
+	private String ID, currentRequest = "";
 	private InetAddress TAddr;
 	private boolean continueListen = true;
 	
@@ -352,7 +352,7 @@ public class RequestHandler extends Thread{
 			System.out.println(ID + "Time out " + terminate + ".");
 			if(terminate == TIMEOUTMAX) {
 				System.out.println(ID + "ERROR: No Response From Client, Disconnected.");
-				myClient.close();
+				if(myClient != null) myClient.close();
 				continueListen = false;
 				return;
 			}
