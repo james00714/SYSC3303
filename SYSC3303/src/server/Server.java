@@ -41,7 +41,7 @@ public class Server{
 	/*
 	 * Method to stop the server
 	 * */
-	public void stopServer() {
+	public synchronized void stopServer() {
 		myListener.stopRunning();  // Stop listener
 		Client.closeAll();
 	}

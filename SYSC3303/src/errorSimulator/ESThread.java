@@ -20,6 +20,8 @@ public class ESThread extends Thread{
 	private int ID;
 	private boolean continueListen = true;
 
+
+
 	public ESThread(int errorType, int errorChoice, int errorPacket, int blockChoice, int delayChoice, DatagramPacket received) {
 		//		byte[] sendData = new byte[1024];
 
@@ -33,8 +35,7 @@ public class ESThread extends Thread{
 		this.receivedPacket = received;
 		this.clientAddress = receivedPacket.getAddress();
 		this.clientPort = receivedPacket.getPort();
-		
-		
+
 		try {
 			receiveSendSocket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -62,6 +63,7 @@ public class ESThread extends Thread{
 			tryError(receivedPacket);
 			receive();
 		}
+
 	}
 
 	private void tryError(DatagramPacket receivedPacket){
@@ -76,6 +78,7 @@ public class ESThread extends Thread{
 				////////////////////
 				///////////////////
 			}
+
 		}else {	
 			transferPacket(receivedPacket);		
 		}
@@ -117,7 +120,7 @@ public class ESThread extends Thread{
 		default: System.out.println("Oops, something is wrong"); break;
 		}
 	}
-
+  
 	public void sendPacket(DatagramPacket sendPacket) {
 
 		try {
@@ -151,6 +154,7 @@ public class ESThread extends Thread{
 		}catch(SocketTimeoutException e1) {
 			System.out.println(ID + ": Timeout, closing thread.");
 			continueListen = false;
+
 			return;
 		}catch (IOException e) {
 			e.printStackTrace();
