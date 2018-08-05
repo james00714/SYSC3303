@@ -18,6 +18,9 @@ public class ESThread extends Thread{
 	private int serverPort = 69;
 	private RequestParser rp;
 	private int ID;
+	private boolean continueListen = true;
+
+
 
 	public ESThread(int errorType, int errorChoice, int errorPacket, int blockChoice, int delayChoice, DatagramPacket received) {
 		//		byte[] sendData = new byte[1024];
@@ -32,7 +35,7 @@ public class ESThread extends Thread{
 		this.receivedPacket = received;
 		this.clientAddress = receivedPacket.getAddress();
 		this.clientPort = receivedPacket.getPort();
-		//temp
+
 		try {
 			receiveSendSocket = new DatagramSocket();
 		} catch (SocketException e) {
@@ -56,7 +59,11 @@ public class ESThread extends Thread{
 		
 		System.out.println("Packet received:");
 		printPacketInfo(receivedPacket);
-		tryError(receivedPacket);
+		while(continueListen) {
+			tryError(receivedPacket);
+			receive();
+		}
+
 	}
 
 	private void tryError(DatagramPacket receivedPacket){
@@ -67,15 +74,13 @@ public class ESThread extends Thread{
 			if(errorType == 1) {
 				makeTransmissionError(receivedPacket);
 				errorType = 0;
-				receive();
 			}else if(errorType == 2) {
 				////////////////////
 				///////////////////
 			}
-		}else {
-			
-			transferPacket(receivedPacket);
-			receive();
+
+		}else {	
+			transferPacket(receivedPacket);		
 		}
 	}
 
@@ -115,7 +120,7 @@ public class ESThread extends Thread{
 		default: System.out.println("Oops, something is wrong"); break;
 		}
 	}
-
+  
 	public void sendPacket(DatagramPacket sendPacket) {
 
 		try {
@@ -148,12 +153,13 @@ public class ESThread extends Thread{
 			printPacketInfo(receivedPacket);
 		}catch(SocketTimeoutException e1) {
 			System.out.println(ID + ": Timeout, closing thread.");
+			continueListen = false;
+
 			return;
 		}catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		tryError(receivedPacket);
 	}
 
 	
