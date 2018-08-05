@@ -41,15 +41,9 @@ public class Server{
 	/*
 	 * Method to stop the server
 	 * */
-	public synchronized void stopServer() {
+	public void stopServer() {
 		myListener.stopRunning();  // Stop listener
-		while(Client.getClientsSize() != 0) {
-			try {
-				wait();	
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}	
+		Client.closeAll();
 	}
 	
 	//	Server starts here
