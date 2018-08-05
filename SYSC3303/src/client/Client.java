@@ -4,6 +4,8 @@
 package client;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class Client {
@@ -11,7 +13,8 @@ public class Client {
 	private	String fileName;
 	private File check, permit, space;
 	private	boolean running = true;
-
+	private String ip;
+	private InetAddress ipAddress;
 
 	public Client (){}
 
@@ -31,63 +34,73 @@ public class Client {
 		return this.fig;
 	}
 
+	public InetAddress getIpAddress () {
+		return this.ipAddress;
+	}
+
 	/*
 	 * Method for the UI
 	 * First ask user input for mode, then read/write request and finally output mode 
 	 */
-	public void menu (){
+	public void menu () throws UnknownHostException{
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
-		System.out.println("Please select your mode:");
-		System.out.println("1. Normal  <Client, Server>");
-		System.out.println("2. Test  <Client, Error Simulator, Server>");
-		mode = sc.next();
-		if (!mode.equals("quit")) {
-			System.out.println("Please select your request");
-			System.out.println("1. RRQ <Read Request>");
-			System.out.println("2. WRQ <Write Request>");
-			request = sc.next();
-			if (!request.equals("quit")) {
-				System.out.println("Please enter your file Name ");
-				fileName = sc.next();
+		System.out.println("Please enter the destination IP address");
+		ip = sc.next();
 
-				if (request.equals("1")) {
-					if (!this.checkDisk(fileName)	) {
-						System.out.println("Disk full can't read.");
-						System.out.println	("Please delete file and come again :)");
+		if (!ip.equals("quit")) {
+			ipAddress = InetAddress.getByName(ip);
+			System.out.println("Please select your mode:");
+			System.out.println("1. Normal  <Client, Server>");
+			System.out.println("2. Test  <Client, Error Simulator, Server>");
+			mode = sc.next();
+			if (!mode.equals("quit")) {
+				System.out.println("Please select your request");
+				System.out.println("1. RRQ <Read Request>");
+				System.out.println("2. WRQ <Write Request>");
+				request = sc.next();
+				if (!request.equals("quit")) {
+					System.out.println("Please enter your file Name ");
+					fileName = sc.next();
+
+					if (request.equals("1")) {
+						if (!this.checkDisk(fileName)	) {
+							System.out.println("Disk full can't read.");
+							System.out.println	("Please delete file and come again :)");
+						}
+
+
+						while (this.checkFile(fileName)) {
+							System.out.println("File already exist error.");
+							System.out.println	("Please enter a new file Name");
+							fileName = sc.next();
+						}
+
+					}else if (request.equals("2")) {
+						while (!this.checkFile(fileName)) {
+							System.out.println("File not found error.");
+							System.out.println("Please re-enter your file Name ");
+							fileName = sc.next();
+						}
+
+						while (!this.permission(fileName)) {
+							System.out.println("Access violation error.");
+							System.out.println("Please enter a new file Name ");
+							fileName = sc.next();
+						}
+
+
+					}else{
+						System.out.println("Error");
 					}
-
-
-					while (this.checkFile(fileName)) {
-						System.out.println("File already exist error.");
-						System.out.println	("Please enter a new file Name");
-						fileName = sc.next();
+					if(!fileName.equals("quit")) {
+						System.out.println("Please enter your mode for data");
+						System.out.println("1. Verbose");
+						System.out.println("2. Quiet");
+						fig = sc.next();		
+					}else {
+						sc.close();
 					}
-
-
-
-				}else if (request.equals("2")) {
-					while (!this.checkFile(fileName)) {
-						System.out.println("File not found error.");
-						System.out.println("Please re-enter your file Name ");
-						fileName = sc.next();
-					}
-
-					while (!this.permission(fileName)) {
-						System.out.println("Access violation error.");
-						System.out.println("Please enter a new file Name ");
-						fileName = sc.next();
-					}
-
-
-				}else{
-					System.out.println("Error");
-				}
-				if(!fileName.equals("quit")) {
-					System.out.println("Please enter your mode for data");
-					System.out.println("1. Verbose");
-					System.out.println("2. Quiet");
-					fig = sc.next();		
 				}else {
 					sc.close();
 				}

@@ -142,20 +142,15 @@ public class Sender {
 	/*
 	 * Send packets
 	*/
-	public void SendPacket(byte [] packet) {
+	public void SendPacket(byte [] packet) throws IOException {
 		//		System.out.println("Client: sending a packet...");
+		InetAddress ipAddress = c.getIpAddress();
 		if(receivePacket == null) {
-			try {
-				sendPacket = new DatagramPacket(packet, packet.length,
-						InetAddress.getLocalHost(), port);
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.exit(1);
-			}
+			sendPacket = new DatagramPacket(packet, packet.length,
+					ipAddress, port);
 		}else {
 			sendPacket = new DatagramPacket(packet, packet.length,
 					receivePacket.getAddress(), receivePacket.getPort());
-				
 		}
 			
 		/*
