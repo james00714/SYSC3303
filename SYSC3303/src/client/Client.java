@@ -67,7 +67,7 @@ public class Client {
 					if (request.equals("1")) {
 						if (!this.checkDisk(fileName)	) {
 							System.out.println("Disk full can't read.");
-							System.out.println	("Please delete file and come again :)");
+							System.out.println	("Please delete file and come againytedukyjf :)");
 						}
 
 
