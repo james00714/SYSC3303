@@ -197,6 +197,7 @@ public class ErrorSimulator {
 			stop();
 			return;
 		}
+		
 		try {
 			packetChoice = Integer.valueOf(pc);
 			if (packetChoice < 1 || packetChoice > 6) {

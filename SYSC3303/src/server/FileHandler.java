@@ -11,10 +11,13 @@ import java.io.IOException;
 
 public class FileHandler {
 
+	private static String directory = "src\\server\\files\\";
+	
 	private FileInputStream fs;
 	private FileOutputStream os;
 	private byte[] fileBuffer;
 	private RequestHandler RH;
+	private File f;
 
 	public FileHandler(RequestHandler requestHandler) {
 		RH = requestHandler;
@@ -22,17 +25,18 @@ public class FileHandler {
 
 	/*
 	 * Method to handle read request
-	 * In: file path or name
+	 * @param	file	file path or name
+	 * @return	byte[]	file data
 	 * */
 	public byte[] readFile(String file) throws IOException {
 
 		if(!file.contains("\\")) {
-			file = "src\\server\\files\\" + file;
+			file = directory + file;
 		}	
 		
 		//	Try loading the file
 		int count;
-		File f = new File(file);
+		f = new File(file);
 		if(!f.exists()) {
 			System.out.println("ERROR: File Not Found.");
 			RH.SendErrorPacket(1, "File not found");
@@ -76,6 +80,12 @@ public class FileHandler {
 	 * */
 	public byte[] readFile(){
 
+		if(!f.canRead()) {
+			System.out.println("ERROR: Access Violation.");
+			RH.SendErrorPacket(2, "Access violation");
+			return null; 
+		}
+		
 		int count;
 		fileBuffer = new byte[512];
 		
@@ -115,6 +125,16 @@ public class FileHandler {
 
 		System.out.println("Prepare Writing File: " + file);
 		
+		File dir = new File(directory);
+		long space = dir.getUsableSpace();
+		System.out.println(directory + ", available space: " + space);
+		
+		if(space <= 0) {
+			System.out.println("ERROR: Not Enough Space.");
+			RH.SendErrorPacket(3, "Disk full or allocation exceeded");
+			return false;
+		}
+		
 		if(file.contains("\\")) {
 			int index = 0;
 			for(int i = 0; i < file.length(); i++){
@@ -124,19 +144,19 @@ public class FileHandler {
 			}
 			file = file.substring(index, file.length());
 		}
-		file = "src\\server\\files\\" + file;
-		File fileToWrite = new File(file);
+		file = directory + file;
+		f = new File(file);
 		
 		// File already exist
-		if(fileToWrite.exists()) {
+		if(f.exists()) {
 			System.out.println("ERROR: File already exists.");
 			RH.SendErrorPacket(6, "File already exists");
 			return false;
 		}
 		try{
-			fileToWrite.createNewFile();
+			f.createNewFile();
 			// set output stream to write file
-			os = new FileOutputStream(fileToWrite);		
+			os = new FileOutputStream(f);		
 		} catch (IOException e) {
 			
 			// Access denied
@@ -177,6 +197,13 @@ public class FileHandler {
 	public boolean writeFile(byte[] fileData){
 		
 		System.out.println("Writing file...");
+		
+		if(!f.canWrite()) {
+			System.out.println("ERROR: Access Violation.");
+			RH.SendErrorPacket(2, "Access violation");
+			return false;
+		}
+		
 		try{
 			os.write(fileData);
 			os.flush();	
@@ -199,5 +226,15 @@ public class FileHandler {
 			return false;
 		}
 		return true;
+	}
+	
+	public static void setDir(String dir) {
+		if(dir.charAt(dir.length()-1) != '\\')
+			dir += '\\';
+		directory = dir;
+	}
+	
+	public static void setDefaultDir() {
+		directory = "src\\server\\files\\";
 	}
 }

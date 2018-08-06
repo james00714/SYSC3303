@@ -31,6 +31,27 @@ public class Server{
 				stopServer();
 				sc.close();
 				break;
+			}else if(cmd.toLowerCase().equals("dir")){
+				System.out.println("Please provide the directory: ");
+				String dir = sc.next();
+				while(true) {
+					if(dir.equals("default")) {
+						FileHandler.setDefaultDir();
+						System.out.println("Working directory set to default.");
+						break;
+					}else {
+						File f = new File(dir);
+						if(f.isDirectory()) {
+							FileHandler.setDir(dir);
+							System.out.println("Working directory set to " + dir);
+							break;
+						}else {
+							System.out.println("Directory not exists, please try again.");
+							System.out.println("Please provide the directory: ");
+							dir = sc.next();
+						}
+					}
+				}		
 			}else {
 				System.out.println("Invalid input.");
 			}
