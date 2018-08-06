@@ -10,13 +10,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class FileHandler {
-	
+	private Client c;
 	private FileInputStream fs;
 	private FileOutputStream os;
 	private File fileToWrite;
 	private byte[] fileBuffer;
 	
-	public FileHandler() {}
+	public FileHandler(Client c) {
+		this.c = c;
+	}
 	
 	/*
 	 * Method to handle read request
@@ -25,7 +27,7 @@ public class FileHandler {
 	public void readFile(String file) throws IOException {
 
 		if(!file.contains("\\")) {
-			file = "src\\client\\files\\" + file;
+			file = c.getLocation() + "\\" + file;
 		}	
 		//	Try loading the file
 		try {
@@ -85,7 +87,8 @@ public class FileHandler {
 			 
 			
 		}else {
-			file = "src\\client\\files\\" + file;
+			System.out.println(c.getLocation());
+			file = c.getLocation() +"\\"+ file;
 		}
 		
 		

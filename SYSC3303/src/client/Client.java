@@ -14,7 +14,7 @@ public class Client {
 	private File check, space;
 
 	private	boolean running = true;
-	private String ip, loc, location = "src\\client\\files\\";
+	private String ip, loc, location = "src\\client\\files";
 	private InetAddress ipAddress;
 
 	public Client (){}
@@ -65,24 +65,25 @@ public class Client {
 				System.out.println("2. WRQ <Write Request>");
 				request = sc.next();
 				if (!request.equals("quit")) {
-					System.out.println("Please select your file-storing location");
+					System.out.println("Please select your location");
 					System.out.println("1. src\\client\\files\\");
 					System.out.println("2. I want my own space :p");
 					loc = sc.next();
-					if (!loc.equals("quit")) {
-					
+					if (!loc.equals("quit")) {		
 						if (loc.equals("2")) {
-							System.out.println("Please enter your location. Don't forget to enter slashes");
+							System.out.println("Please enter your location. Don't forget to enter \\");
 							location = sc.next();
+							//location = "src\\test\\files";
 						}
 						
 						System.out.println("Please enter your file Name ");
 						fileName = sc.next();
-
+						
+						//read request
 						if (request.equals("1")) {
 							if (!this.checkDisk(fileName)	) {
 								System.out.println("Disk full can't read.");
-								System.out.println	("Please delete file and come againytedukyjf :)");
+								System.out.println	("Please delete file and come :)");
 							}
 
 
@@ -92,7 +93,7 @@ public class Client {
 								fileName = sc.next();
 							}
 						}
-
+						//write request
 						else if (request.equals("2")) {
 							while(true) {
 								if (fileName.equals("quit")) {
@@ -139,11 +140,9 @@ public class Client {
 	}
 	
 	
-	
-	
 	//file not found
 	public boolean checkFile (String fileName) {
-		check = new File (location + fileName);
+		check = new File (location + "\\" + fileName);
 		if (check.exists()) {
 			System.out.println("File exist.");
 			return true;
@@ -154,7 +153,7 @@ public class Client {
 	//access violation
 	public boolean permission (String fileName) {
 		try {
-			FileInputStream permit = new FileInputStream(new File (location + fileName));
+			FileInputStream permit = new FileInputStream(new File (location + "\\" + fileName));
 			byte [] fileBuffer = new byte[512];	
 			permit.read(fileBuffer);
 			permit.close();
@@ -174,7 +173,7 @@ public class Client {
 
 	//check disk full
 	public boolean checkDisk (String fileName) {
-		space = new File (location + fileName);
+		space = new File (location + "\\" + fileName);
 		if (space.getUsableSpace() > 0) {
 			System.out.println("Disk available space: " +space.getUsableSpace());
 			return true;
@@ -212,6 +211,6 @@ public class Client {
 		while(c.running) {
 			c.menu();
 			c.start(n);	
-		}		
+		}			
 	}
 }
