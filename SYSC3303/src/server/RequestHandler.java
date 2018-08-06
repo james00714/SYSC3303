@@ -33,6 +33,7 @@ public class RequestHandler extends Thread{
 	 * */
 	public RequestHandler(DatagramPacket receivePacket) throws IOException {
 		
+		super(String.valueOf(receivePacket.getPort()));
 		myClient = null;
 		myPacket = receivePacket;
 		TID = receivePacket.getPort();
@@ -56,6 +57,7 @@ public class RequestHandler extends Thread{
 	public void run() {
 		
 		handleRequest();
+		
 		while(continueListen) {
 			try {
 				receiveFromClient();
@@ -65,6 +67,8 @@ public class RequestHandler extends Thread{
 				e.printStackTrace();
 			}
 		}
+		
+		System.out.println(ID + "Disconnected.");
 	}
 	
 	/*
@@ -131,7 +135,6 @@ public class RequestHandler extends Thread{
 			finalBlock = -1;
 			byte[] filedata = myClient.getFileHandler().readFile(filename);	
 			if(filedata == null) {
-				System.out.println(ID + "Disconnected.");
 				myClient.close();
 				continueListen = false;
 				return;
@@ -167,7 +170,6 @@ public class RequestHandler extends Thread{
 			}
 			currentRequest = "WRITE";
 			if(myClient.getFileHandler().prepareWrite(filename) == false) {
-				System.out.println(ID + "Disconnected.");
 				myClient.close();
 				continueListen = false;
 				return;
@@ -193,7 +195,6 @@ public class RequestHandler extends Thread{
 			if(block == myClient.getBlockNum()){
 				System.out.println("New Block Received, Writing...");
 				if(myClient.getFileHandler().writeFile(fileData) == false) {
-					System.out.println(ID + "Disconnected.");
 					myClient.close();
 					continueListen = false;
 					return;
@@ -203,7 +204,6 @@ public class RequestHandler extends Thread{
 				if(myPacket.getLength() < 516) {
 					//	Reached the end of file
 					System.out.println("Transfer Complete");
-					System.out.println(ID + "Disconnected.");
 					myClient.close();
 					continueListen = false;
 					return;
@@ -217,7 +217,6 @@ public class RequestHandler extends Thread{
 		}else {
 			System.out.println("ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			System.out.println(ID + "Disconnected.");	
 			continueListen = false;
 		}
 	}
@@ -259,7 +258,6 @@ public class RequestHandler extends Thread{
 		}else {
 			System.out.println("ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			System.out.println(ID + "Disconnected.");
 			continueListen = false;
 		}
 	}
@@ -351,7 +349,7 @@ public class RequestHandler extends Thread{
 			terminate += 1;
 			System.out.println(ID + "Time out " + terminate + ".");
 			if(terminate == TIMEOUTMAX) {
-				System.out.println(ID + "ERROR: No Response From Client, Disconnected.");
+				System.out.println(ID + "ERROR: No Response From Client.");
 				if(myClient != null) myClient.close();
 				continueListen = false;
 				return;
@@ -370,7 +368,7 @@ public class RequestHandler extends Thread{
 	public void handleERROR(int code, String msg) {
 		System.out.println("ERROR packet Received.");
 		System.out.println("Client ERROR : " + msg);
-		System.out.println(ID + "Disconnected.");
+		continueListen = false;
 	}
 	
 	public void displaySend(DatagramPacket packet) {
