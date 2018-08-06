@@ -104,7 +104,7 @@ public class Sender {
 
 		if (blockNum == blockNumber){
 			if(blockNum == 1) {
-				fileHandler = new FileHandler();
+				fileHandler = new FileHandler(c);
 				fileHandler.prepareWrite(filename);
 			}
 			if(length > 516){		
@@ -152,11 +152,11 @@ public class Sender {
 	}
 
 	public boolean InOperation (String fileName) {
-		File f = new File ("src\\client\\files\\" + fileName);
+		File f = new File (c.getLocation() +"\\"+ fileName);
 		if (f.canWrite()) {
 			return true;
 		}
-		
+
 		return false;
 	}
 
@@ -305,7 +305,7 @@ public class Sender {
 			System.out.println("Read request generated.");
 		}else {
 			send[1] = 2;
-			fileHandler = new FileHandler();
+			fileHandler = new FileHandler(c);
 			fileHandler.readFile(filename);
 			blockNumber = 0;
 			finalBlock = -1;
