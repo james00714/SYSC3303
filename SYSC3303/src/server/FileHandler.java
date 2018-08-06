@@ -196,8 +196,6 @@ public class FileHandler {
 	 * */
 	public boolean writeFile(byte[] fileData){
 		
-		System.out.println("Writing file...");
-		
 		if(!f.canWrite()) {
 			System.out.println("ERROR: Access Violation.");
 			RH.SendErrorPacket(2, "Access violation");
