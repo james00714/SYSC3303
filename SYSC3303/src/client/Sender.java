@@ -44,8 +44,8 @@ public class Sender {
 		try {
 			sendReceiveSocket.receive(receivePacket);
 			TID = receivePacket.getPort();
-	
-	//		System.out.println("type: "+type );
+
+			//		System.out.println("type: "+type );
 			end = 0;
 			PrintReceiver(receivePacket);
 		} catch(SocketTimeoutException e) {
@@ -53,11 +53,10 @@ public class Sender {
 			//System.exit(1);
 			end++;
 			System.out.println("Timeout "+ end + " time(s)");
-			
+
 			if(end == TIMEOUTMAX) {
 				end = 0;
 				System.out.println("ERROR: No Response From Server, closing transmission.");
-				
 				continueListen = false;
 				return;
 			}
@@ -105,27 +104,35 @@ public class Sender {
 
 		if (blockNum == blockNumber){
 			if(blockNum == 1) {
-				fileHandler = new FileHandler();
+				fileHandler = new FileHandler(c);
 				fileHandler.prepareWrite(filename);
 			}
 			if(length > 516){		
 				System.out.println("Wrong packet received (oversized).");
-			}else {
+			}else {			
 				if(fileHandler.writeFile(RP.getFileData()) == false) {
 					SendErrorPacket(3, "Disk full or allocation exceeded");
 					fileHandler.close();
 					continueListen = false;
 				}else {
-					send[0] = 0;
-					send[1] = 4;
-					send[2] = (byte)(blockNumber/256);
-					send[3] = (byte)(blockNumber%256);
-					SendPacket (send);
-					blockNumber++;	
-					if(length < 516){
-						System.out.println("Transfer Complete");
+					if (!InOperation(filename)) {
+						System.out.println("Access Violation");
+						SendErrorPacket(2, "Access Violation");
 						fileHandler.close();
 						continueListen = false;
+					}
+					else {
+						send[0] = 0;
+						send[1] = 4;
+						send[2] = (byte)(blockNumber/256);
+						send[3] = (byte)(blockNumber%256);
+						SendPacket (send);
+						blockNumber++;	
+						if(length < 516){
+							System.out.println("Transfer Complete");
+							fileHandler.close();
+							continueListen = false;
+						}
 					}
 				}
 			}
@@ -142,6 +149,15 @@ public class Sender {
 		}else{
 			System.out.println("Error bk number.");	
 		}	
+	}
+
+	public boolean InOperation (String fileName) {
+		File f = new File (c.getLocation() +"\\"+ fileName);
+		if (f.canWrite()) {
+			return true;
+		}
+
+		return false;
 	}
 
 
@@ -204,7 +220,7 @@ public class Sender {
 		send[2] = (byte)(BKNumber/256);
 		send[3] = (byte)(BKNumber%256);
 		SendPacket (send);
-		
+
 	}
 
 	/*
@@ -241,7 +257,7 @@ public class Sender {
 	/*
 	 * Send packets
 
-	*/
+	 */
 	public void SendPacket(byte [] packet) {
 		//		System.out.println("Client: sending a packet...");
 		InetAddress ipAddress = c.getIpAddress();
@@ -289,7 +305,7 @@ public class Sender {
 			System.out.println("Read request generated.");
 		}else {
 			send[1] = 2;
-			fileHandler = new FileHandler();
+			fileHandler = new FileHandler(c);
 			fileHandler.readFile(filename);
 			blockNumber = 0;
 			finalBlock = -1;

@@ -1,5 +1,4 @@
 /*
- * SYSC3033 Project Group 11 Server Part
  * 
  * RequestHandler to handle each request
  * */
