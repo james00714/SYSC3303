@@ -91,7 +91,7 @@ public class ErrorSimulator {
 		if(packetChoice == 1 || packetChoice == 2) {
 			System.out.println("---------- Error Code Error ----------");
 			System.out.println("    1. Invalid Mode 		 (Error Code 4)");
-			System.out.println("    2. Invalid Opcode 		 (Error Code 4)");
+			System.out.println("    2. Invalid Opcode 		 (Error Code 4 if new opcode is 3 or 4, else Error Code 5)");
 			System.out.println("    3. Invalid Filename 	 (Error Code 4)");
 			System.out.println("    4. Invalid Packet Size   (Error Code 4)");
 			System.out.println("    5. Invalid Packet Format (Error Code 4)");
@@ -151,7 +151,7 @@ public class ErrorSimulator {
 		}else {
 			System.out.println("---------- Error Code Error ----------");
 			System.out.println("    1. Invalid Opcode 		 (Error Code 4)");
-			System.out.println("    2. Invalid Block Number  (Error Code 4)");
+			System.out.println("    2. Invalid Packet Format (Error Code 4)");
 			System.out.println("    3. Invalid Packet Size   (Error Code 4)");
 			System.out.println("    4. Unknown TID   		 (Error Code 5)");
 			System.out.println("    5. Unknown Address   	 (Error Code 5)");
@@ -174,7 +174,7 @@ public class ErrorSimulator {
 					break;
 				case 2:
 					listener.setErrorChoice(errorChoice);
-					askInvalidBlkNum();
+					listener.confirmChange();
 					break;
 				case 3:
 					listener.setErrorChoice(errorChoice);
@@ -262,7 +262,7 @@ public class ErrorSimulator {
 					return;
 				}else {
 					listener.setPacketChoice(packetChoice);
-					if(errorChoice == 2) {
+					if(errorChoice == 2 && errorType == 1) {
 						delaySelection();
 					}else if(errorType == 2){
 						errorCodeError();	
@@ -297,12 +297,12 @@ public class ErrorSimulator {
 			}else if (blockChoice == -1){
 				return;
 			}else {
-				if(errorChoice == 2) {
+				listener.setBlockChoice(blockChoice);
+				if(errorChoice == 2 && errorType == 1) {
 					delaySelection();
 				}else if(errorType ==2){
 					errorCodeError();
 				}else {
-					listener.setBlockChoice(blockChoice);
 					listener.confirmChange();
 				}
 			}
@@ -381,34 +381,6 @@ public class ErrorSimulator {
 		listener.confirmChange();
 	}
 	
-	public void askInvalidBlkNum() {
-		System.out.println("---------- Please Input a new Block Number ----------");
-		System.out.println("    Enter -1 to go back to Error Menu");
-		System.out.println(">>>>>>>> input quit to exit this program");
-		
-		cc = scan.next();
-		
-		if(cc.equals("quit")) {
-			stop();
-			return;
-		}
-		
-		try {
-			errorBlkNum = Integer.valueOf(cc);
-			if(errorBlkNum < -1) {
-				System.out.println("Invalid input, please try again.");
-				askInvalidBlkNum();
-			}else if(errorBlkNum == -1) {
-				return;
-			}else {
-				listener.setErrorBlkNum(errorBlkNum);
-				listener.confirmChange();
-			}
-		}catch(NumberFormatException e) {
-			System.out.println("Invalid input, please try again.");
-			askInvalidBlkNum();
-		}
-	}
 	
 	public void askInvalidPacketSize() {
 		System.out.println("---------- Please Input a new Packet Size----------");

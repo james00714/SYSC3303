@@ -8,10 +8,10 @@ public class ESListener extends Thread{
 	private DatagramPacket receivedPacket;
 	private DatagramSocket receiveSendSocket;
 	private int errorType,errorChoice, packetChoice, blockChoice, delayChoice;
-	private int errorOpcode, errorBlkNum, errorPacketSize, errorPacketFormat, errorTID;
+	private int errorOpcode, errorPacketSize, errorPacketFormat, errorTID;
 	private String errorMode,errorFilename, errorAddress;
 	private int tempET,tempEC, tempPC, tempBC, tempDC;
-	private int tempEO, tempEB, tempEP, tempER,tempED;
+	private int tempEO, tempEP, tempER,tempED;
 	private String tempEM, tempEF,tempEA;
 	private boolean lisRunning = false;
 	
@@ -48,7 +48,7 @@ public class ESListener extends Thread{
 		
 		
 		Thread normalThread = new ESThread(errorType, errorChoice, packetChoice,blockChoice,delayChoice,errorOpcode,
-											errorMode, errorFilename,errorBlkNum, errorPacketSize, errorPacketFormat,
+											errorMode, errorFilename, errorPacketSize, errorPacketFormat,
 											errorTID, errorAddress,receivedPacket);
 		normalThread.start();
 	}
@@ -92,12 +92,7 @@ public class ESListener extends Thread{
 		this.tempEF = errorFilename;
 		System.out.println("Error Filename set to " + this.tempEF);
 	}
-	
-	public void setErrorBlkNum(int errorBlkNum){
-		this.tempEB = errorBlkNum;
-		System.out.println("Error Block Number set to " + this.tempEB);
-	}
-	
+
 	public void setErrorPacketSize(int errorPacketSize){
 		this.tempEP = errorPacketSize;
 		System.out.println("Error Packet Size set to " + this.tempEP);
@@ -128,7 +123,6 @@ public class ESListener extends Thread{
 		errorFilename = tempEF;
 		errorPacketSize = tempEP;
 		errorPacketFormat = tempER;
-		errorBlkNum = tempEB;
 		errorTID = tempED;
 		errorAddress = tempEA;
 		System.out.println("Error configration submited.");
