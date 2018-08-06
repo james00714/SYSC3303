@@ -1,16 +1,19 @@
 package errorSimulator;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class ErrorSimulator {
 	
 	private Scanner scan;
-	private String ec, tc, pc, bc, dc,cc;  
+	private String ic,ec, tc, pc, bc, dc,cc;  
 	private ESListener listener;
 	private int errorType,errorChoice;
 	private int packetChoice, blockChoice, delayChoice;
 	private int  errorOpcode, errorPacketSize, errorPacketFormat;
 	private String errorMode, errorFilename;
+	private InetAddress desIP;
 
 	
 	public ErrorSimulator() {
@@ -19,6 +22,48 @@ public class ErrorSimulator {
 		listener = new ESListener();
 	}
 
+	public void promptForDestIP() {
+		System.out.println("---------- Please Input Destination IP Address ----------");
+		System.out.println("    0. Local host (same ip)");
+		System.out.println("    1. Other IP address");
+		System.out.println(">>>>>>>> input quit to exit this program");
+		
+		ic = scan.next();
+		if(ic.equals("quit")) {
+			stop();
+			return;
+		}
+		
+		// TODO: type checking 
+		
+		if(Integer.valueOf(ic) == 0) {
+			try {
+				desIP = InetAddress.getLocalHost();
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+		}
+		else if (Integer.valueOf(ic) == 1) { 
+			System.out.println("---------- Please Input Destination IP Address ----------");
+			System.out.println(">>>>>>>> input quit to exit this program");
+			
+			ic = scan.next();
+			if(ic.equals("quit")) {
+				stop();
+				return;
+			}
+			
+			try {
+				desIP = InetAddress.getByName(ic);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		listener.setDesIP(desIP);
+		
+		errorMainMenu();
+	}
 	
 	public void errorMainMenu() {
 		
@@ -441,7 +486,7 @@ public class ErrorSimulator {
 		ErrorSimulator es = new ErrorSimulator();
 		while(true) {
 			System.out.println("in main while loop");
-			es.errorMainMenu();
+			es.promptForDestIP();
 		}
 	}
 

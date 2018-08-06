@@ -13,7 +13,9 @@ public class ESListener extends Thread{
 	private int tempET,tempEC, tempPC, tempBC, tempDC;
 	private int tempEO, tempEP, tempER;
 	private String tempEM, tempEF;
+	private InetAddress tempIP;
 	private boolean lisRunning = false;
+	private InetAddress desIP;
 	
 	public ESListener() {
 		try {
@@ -47,9 +49,9 @@ public class ESListener extends Thread{
 		}
 		
 		
-		Thread normalThread = new ESThread(errorType, errorChoice, packetChoice,blockChoice,delayChoice,errorOpcode,
-											errorMode, errorFilename, errorPacketSize, errorPacketFormat, receivedPacket);
-		normalThread.start();
+		Thread t = new ESThread(errorType, errorChoice, packetChoice,blockChoice,delayChoice,errorOpcode,
+											errorMode, errorFilename, errorPacketSize, errorPacketFormat, receivedPacket, desIP);
+		t.start();
 	}
 	
 	public void setErrorType(int errorType) {
@@ -102,6 +104,10 @@ public class ESListener extends Thread{
 		System.out.println("Error Packet Format set to " + this.tempER);
 	}
 	
+	public void setDesIP(InetAddress desIP) {
+		this.tempIP = desIP;
+		System.out.println("Destination IP address set to " + this.tempIP);
+	}
 	
 	public void confirmChange() {
 		errorType = tempET;
@@ -114,6 +120,7 @@ public class ESListener extends Thread{
 		errorFilename = tempEF;
 		errorPacketSize = tempEP;
 		errorPacketFormat = tempER;
+		desIP = tempIP;
 		System.out.println("Error configration submited.");
 		if(lisRunning == false) {
 			lisRunning = true;
