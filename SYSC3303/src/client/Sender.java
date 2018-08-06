@@ -79,7 +79,7 @@ public class Sender {
 
 		if (receivePacket.getPort() != TID && receivePacket.getPort() != -1) {
 			System.out.println("Unknown TID error");
-			SendErrorPacket(4, "Unknown transfer ID");
+			SendErrorPacket(5, "Unknown transfer ID");
 		}else {
 			switch (RP.getType()) {
 			case 3:	DATA(receivePacket);
