@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class Server{
 	
-	private final int port = 69;  // Port number
+	private static final int port = 69;  // Port number
 	private Listener myListener;
 	
 	public Server(){}
@@ -26,6 +26,7 @@ public class Server{
 		System.out.println("Server now online, input \"quit\" to end the server.");
 		
 		while(true) {
+			System.out.print("Server>");
 			cmd = sc.next();
 			if(cmd.toLowerCase().equals("quit")) {
 				stopServer();
@@ -39,7 +40,9 @@ public class Server{
 						FileHandler.setDefaultDir();
 						System.out.println("Working directory set to default.");
 						break;
-					}else {
+					}else if(dir.equals("back")){
+						break;
+					}else{
 						File f = new File(dir);
 						if(f.isDirectory()) {
 							FileHandler.setDir(dir);
@@ -51,7 +54,13 @@ public class Server{
 							dir = sc.next();
 						}
 					}
-				}		
+				}
+			}else if(cmd.toLowerCase().equals("verbose")){
+				Printer.setMode(1);
+				System.out.println("Print mode set to verbose.");
+			}else if(cmd.toLowerCase().equals("quiet")){
+				Printer.setMode(0);
+				System.out.println("Print mode set to quiet.");
 			}else {
 				System.out.println("Invalid input.");
 			}
@@ -68,8 +77,7 @@ public class Server{
 	}
 	
 	//	Server starts here
-	public static void main(String[] args) throws IOException{
-		
+	public static void main(String[] args) throws IOException{	
 		Server server = new Server();
 		server.start();
 	}
