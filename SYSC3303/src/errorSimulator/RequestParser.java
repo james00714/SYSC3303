@@ -163,6 +163,10 @@ public class RequestParser {
 		return errorMsg;
 	}
 	
+	public String getMode() {
+		return mode;
+	}
+	
 	public boolean ifCorrect() {
 		return correctFormat;
 	}
