@@ -9,8 +9,8 @@ public class ErrorSimulator {
 	private ESListener listener;
 	private int errorType,errorChoice;
 	private int packetChoice, blockChoice, delayChoice;
-	private int  errorOpcode, errorPacketSize, errorPacketFormat, errorBlkNum, errorTID;
-	private String errorMode, errorFilename, errorAddress;
+	private int  errorOpcode, errorPacketSize, errorPacketFormat;
+	private String errorMode, errorFilename;
 
 	
 	public ErrorSimulator() {
@@ -95,9 +95,8 @@ public class ErrorSimulator {
 			System.out.println("    3. Invalid Filename 	 (Error Code 4)");
 			System.out.println("    4. Invalid Packet Size   (Error Code 4)");
 			System.out.println("    5. Invalid Packet Format (Error Code 4)");
-			System.out.println("    6. Unknown TID   		 (Error Code 5)");
-			System.out.println("    7. Unknown Address   	 (Error Code 5)");
-			System.out.println("    8. Back to Error main menu");
+			System.out.println("    6. Unknown User TID   	 (Error Code 5)");
+			System.out.println("    7. Back to Error main menu");
 			System.out.println(">>>>>>>> input quit to exit this program");
 			
 			ec = scan.next();
@@ -131,13 +130,9 @@ public class ErrorSimulator {
 						break;
 					case 6:
 						listener.setErrorChoice(errorChoice);
-						askInvalidTID();
+						listener.confirmChange();
 						break;
 					case 7:
-						listener.setErrorChoice(errorChoice);
-						askInvalidAddress();
-						break;
-					case 8:
 						break;
 					default:
 						System.out.println("Invalid input, please try again.");
@@ -153,9 +148,8 @@ public class ErrorSimulator {
 			System.out.println("    1. Invalid Opcode 		 (Error Code 4)");
 			System.out.println("    2. Invalid Packet Format (Error Code 4)");
 			System.out.println("    3. Invalid Packet Size   (Error Code 4)");
-			System.out.println("    4. Unknown TID   		 (Error Code 5)");
-			System.out.println("    5. Unknown Address   	 (Error Code 5)");
-			System.out.println("    6. Back to Error main menu");
+			System.out.println("    4. Unknown User TID   	 (Error Code 5)");
+			System.out.println("    5. Back to Error main menu");
 			System.out.println(">>>>>>>> input quit to exit this program");
 			
 			ec = scan.next();
@@ -182,13 +176,9 @@ public class ErrorSimulator {
 					break;
 				case 4:
 					listener.setErrorChoice(errorChoice);
-					askInvalidTID();
+					listener.confirmChange();
 					break;
 				case 5:
-					listener.setErrorChoice(errorChoice);
-					askInvalidAddress();
-					break;
-				case 6:
 					break;
 				default:
 					System.out.println("Invalid input, please try again.");
@@ -441,58 +431,6 @@ public class ErrorSimulator {
 			askInvalidPacketFormat();
 		}
 	}
-	
-	public void askInvalidTID() {
-		System.out.println("---------- Please Input a new TID ----------");
-		System.out.println("    Enter -1 to go back to Error Menu");
-		System.out.println(">>>>>>>> input quit to exit this program");
-		
-		cc = scan.next();
-		
-		if(cc.equals("quit")) {
-			stop();
-			return;
-		}
-		
-		try {
-			errorTID = Integer.valueOf(cc);
-			if(errorTID < -1) {
-				System.out.println("Invalid input, please try again.");
-				askInvalidTID();
-			}else if(errorTID == -1) {
-				return;
-			}else {
-				listener.setErrorTID(errorTID);
-				listener.confirmChange();
-			}
-		}catch(NumberFormatException e) {
-			System.out.println("Invalid input, please try again.");
-			askInvalidTID();
-		}
-	}
-	
-	public void askInvalidAddress() {
-		System.out.println("---------- Please Input a new InetAddress ----------");
-		System.out.println("	Example: 192.168.0.1");
-		System.out.println("    Enter -1 to go back to Error Menu");
-		System.out.println(">>>>>>>> input quit to exit this program");
-		
-		errorAddress = scan.next();
-		
-		if(errorAddress.equals("quit")) {
-			stop();
-			return;
-		}
-		
-		if(errorAddress.equals("-1")) {
-			return;
-		}
-		
-		listener.setErrorAddress(errorAddress);
-		listener.confirmChange();
-	}
-	
-	
 	
 	public void stop() {
 		listener.quit();

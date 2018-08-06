@@ -9,8 +9,8 @@ public class ESThread extends Thread{
 	private DatagramSocket receiveSendSocket;
 
 	private int errorType, errorChoice, errorPacket, blockChoice, delayChoice;
-	private int errorOpcode, errorPacketSize, errorPacketFormat, errorTID;
-	private String errorMode, errorFilename, errorAddress;
+	private int errorOpcode, errorPacketSize, errorPacketFormat;
+	private String errorMode, errorFilename;
 	private InetAddress clientAddress;
 	private int clientPort;
 	private int serverPort = 69;
@@ -21,7 +21,7 @@ public class ESThread extends Thread{
 	
 	public ESThread(int errorType, int errorChoice, int errorPacket, int blockChoice, int delayChoice, 
 			        int errorOp, String errorMode, String errorFilename, int errorPS,
-			        int errorPF, int errorTID, String errorAddr, DatagramPacket received) {
+			        int errorPF, DatagramPacket received) {
 
 		//		byte[] sendData = new byte[1024];
 
@@ -37,8 +37,6 @@ public class ESThread extends Thread{
 		this.errorFilename = errorFilename;
 		this.errorPacketSize = errorPS;
 		this.errorPacketFormat = errorPF;
-		this.errorTID = errorTID;
-		this.errorAddress = errorAddr;
 		this.receivedPacket = received;
 		this.clientAddress = receivedPacket.getAddress();
 		this.clientPort = receivedPacket.getPort();
@@ -160,7 +158,7 @@ public class ESThread extends Thread{
 		try {
 			System.out.println("Receving a packet...");
 			receiveSendSocket.receive(receivedPacket);
-
+			
 			if(!ifClient(receivedPacket)) {
 				if(serverPort == 69) 
 					this.serverPort = receivedPacket.getPort();
@@ -232,9 +230,9 @@ public class ESThread extends Thread{
 			}else if(errorChoice == 5) {
 				transferPacket(modifyPacketFormat(receivedPacket, errorPacketFormat));
 			}else if(errorChoice == 6) {
-				transferErrorFivePacket(receivedPacket, 1);
+				transferErrorFivePacket(receivedPacket);
 			}else {
-				transferErrorFivePacket(receivedPacket, 2);
+				System.out.println("invalid error choice");
 			}
 
 		}else if(errorPacket == 3 || errorPacket == 4) {
@@ -245,9 +243,9 @@ public class ESThread extends Thread{
 			}else if(errorChoice == 3) {
 				transferPacket(modifyPacketSize(receivedPacket, errorPacketSize));
 			}else if(errorChoice == 4) {
-				transferErrorFivePacket(receivedPacket, 1);
+				transferErrorFivePacket(receivedPacket);
 			}else{
-				transferErrorFivePacket(receivedPacket, 2);
+				System.out.println("invalid error choice");
 			}
 		}else {
 			////////Error Packet
@@ -349,27 +347,54 @@ public class ESThread extends Thread{
 	
 	public DatagramPacket modifyBlockNum(DatagramPacket receivedPacket) {
 		
-		System.out.println("2333333!!!");
-		byte[] sendData = new byte[receivedPacket.getLength()];
+		System.out.println("receivedPacket.getLength(): " + receivedPacket.getLength());
+		
+		byte[] sendData = new byte[receivedPacket.getLength()-2];
 		
 		sendData[0] = 0;
 		sendData[1] = (byte) rp.getType();
 		
-		for(int i = 0; i <rp.getFileData().length; i++) {
-			sendData[2+i]= rp.getFileData()[i];
+		if(errorPacket == 3) {
+			for(int i = 0; i <rp.getFileData().length; i++) {
+				sendData[2+i]= rp.getFileData()[i];
+			}
 		}
 		
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
 
-	public void transferErrorFivePacket(DatagramPacket receivedPacket, int error) {
+	public void transferErrorFivePacket(DatagramPacket receivedPacket) {
 		System.out.println("Passing packet received...");
 
-		if(error == 1) {
-			
+		try {
+			errorSocket = new DatagramSocket();
+		}catch(SocketException e) {
+			e.printStackTrace();
+		}
+		
+		if(ifClient(receivedPacket)) {
+			try {
+				sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), InetAddress.getLocalHost(), this.serverPort);
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+			//sendPacket(sendPacket);
+			try {
+				errorSocket.send(sendPacket);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}else {
-			
+			sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), this.clientAddress, this.clientPort);
+			//sendPacket(sendPacket);
+			try {
+				errorSocket.send(sendPacket);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
