@@ -270,6 +270,7 @@ public class ESThread extends Thread{
 		
 		sendData[1] = (byte) opcode;
 		
+		System.out.println("Previous Opcode: 0" + rp.getType() + "    After Change: 0" + opcode);
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
@@ -295,6 +296,8 @@ public class ESThread extends Thread{
 		
 		sendData[3 +rp.getFilename().getBytes().length + errorMode.length] = 0;
 		
+		System.out.println("Previous Mode: " + rp.getMode() + "    After Change: " + mode);
+		
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
@@ -318,7 +321,10 @@ public class ESThread extends Thread{
 		
 		sendData[3 + fileName.length + rp.getMode().getBytes().length] = 0;
 		
+		System.out.println("Previous Filename: " + rp.getFilename() + "    After Change: " + filename);  
+		
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
+		
 		return packet;
 	}
 	
@@ -327,6 +333,8 @@ public class ESThread extends Thread{
 		byte[] data = receivedPacket.getData();
 		
 		System.arraycopy(data, 0, sendData, 0, packetSize);
+		
+		System.out.println("Previous Packet Size: " + receivedPacket.getLength() + "    After Change: " + packetSize);
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
@@ -350,7 +358,7 @@ public class ESThread extends Thread{
 		}
 		
 		sendData[3+filename.length+mode.length] = (byte) packetFormat;
-		
+		System.out.println("Modify the zero padding in RRQ/WRQ from 0 to" + packetFormat);
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
@@ -370,6 +378,7 @@ public class ESThread extends Thread{
 			}
 		}
 		
+		System.out.println("Delete Block Number for received packet");
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
