@@ -14,7 +14,7 @@ public class Client {
 	private File check, space;
 
 	private	boolean running = true;
-	private String ip, loc, location = "src\\client\\files";
+	private String ip, destination, loc, location = "src\\client\\files";
 	private InetAddress ipAddress;
 
 	public Client (){}
@@ -38,12 +38,12 @@ public class Client {
 	public String getLocation () {
 		return this.location;
 	}
-	
+
 	public InetAddress getIpAddress () {
 		return this.ipAddress;
 	}
-	
-	
+
+
 	/*
 	 * Method for the UI
 	 * First ask user input for mode, then read/write request and finally output mode 
@@ -51,10 +51,18 @@ public class Client {
 	public void menu () throws UnknownHostException{
 		Scanner sc = new Scanner(System.in);
 		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
-		System.out.println("Please enter the destination IP address");
+		System.out.println("Please select your destination");
+		System.out.println("1. Local host");
+		System.out.println("2. I have my own destination");
 		ip = sc.next();
 		if (!ip.equals("quit")) {
-			ipAddress = InetAddress.getByName(ip);
+			ipAddress = InetAddress.getLocalHost();
+			if (ip.equals("2")) {
+				System.out.println("Please enter the destination IP address");
+				destination = sc.next();
+				ipAddress = InetAddress.getByName(destination);
+
+			}
 			System.out.println("Please select your mode:");
 			System.out.println("1. Normal  <Client, Server>");
 			System.out.println("2. Test  <Client, Error Simulator, Server>");
@@ -67,19 +75,17 @@ public class Client {
 				if (!request.equals("quit")) {
 					System.out.println("Please select your location");
 					System.out.println("1. src\\client\\files\\");
-					System.out.println("2. I want my own space :p");
+					System.out.println("2. I have my own space :p");
 					loc = sc.next();
 					if (!loc.equals("quit")) {		
 						if (loc.equals("2")) {
 							System.out.println("Please enter your location. Don't forget to enter \\");
 							location = sc.next();
-							//location = "src\\test\\files";
 						}
-						
 						System.out.println("Please enter your file Name ");
 						fileName = sc.next();
-						
-						//read request
+
+						//check read request
 						if (request.equals("1")) {
 							if (!this.checkDisk(fileName)	) {
 								System.out.println("Disk full can't read.");
@@ -93,7 +99,7 @@ public class Client {
 								fileName = sc.next();
 							}
 						}
-						//write request
+						//check write request
 						else if (request.equals("2")) {
 							while(true) {
 								if (fileName.equals("quit")) {
@@ -136,10 +142,12 @@ public class Client {
 			}else {
 				sc.close();
 			}
+		}else {
+			sc.close();
 		}
 	}
-	
-	
+
+
 	//file not found
 	public boolean checkFile (String fileName) {
 		check = new File (location + "\\" + fileName);
