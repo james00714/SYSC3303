@@ -62,6 +62,8 @@ public class Client {
 		synchronized(activeClients){
 			while(activeClients.size() != 0) {
 				try {
+					System.out.println("Remaining active connections: " + activeClients.size());
+					System.out.println("Waiting...");
 					activeClients.wait();
 				}catch(InterruptedException e) {
 					e.printStackTrace();

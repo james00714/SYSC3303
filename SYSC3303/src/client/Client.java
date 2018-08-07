@@ -9,7 +9,8 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class Client {
-	private	String mode, request, fig = "2";
+  
+	private	String mode, request, fig = "1";
 	private	String fileName;
 	private File check;
 
@@ -369,6 +370,7 @@ public class Client {
 		while(c.running) {
 			c.menu();
 			c.start(n);	
-		}			
+		}	
+		
 	}
 }
