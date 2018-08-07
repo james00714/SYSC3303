@@ -61,7 +61,7 @@ public class Sender {
 			}
 			if(currentRequest.equals("2") && sendPacket.getData()[1] == 3 ) {
 				System.out.println("Resending...");
-				System.out.println(sendPacket.getData()[3]);
+				System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
 				sendReceiveSocket.send(sendPacket);
 			}else {
 				System.out.println("Waiting...");
@@ -334,14 +334,10 @@ public class Sender {
 
 	public void PrintReceiver (DatagramPacket receivePacket){
 		Verbose v = new Verbose();
-		Quiet q = new Quiet();
 
 		if (c.getFig().equals("1")) {
 			v.PrintReceiverV(receivePacket);
 		}
-		else {
-			q.PrintReceiverQ(receivePacket);
-		}	
 	}
 
 	/*
@@ -349,13 +345,8 @@ public class Sender {
 	 */
 	public void PrintSender (DatagramPacket sendPacket) {
 		Verbose v = new Verbose();
-		Quiet q = new Quiet();
-
 		if (c.getFig().equals("1")) {
 			v.PrintSender(sendPacket);
-		}
-		else {
-			q.PrintSenderQ(sendPacket);
 		}
 	}
 

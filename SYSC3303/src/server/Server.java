@@ -56,10 +56,10 @@ public class Server{
 					}
 				}
 			}else if(cmd.toLowerCase().equals("verbose")){
-				Printer.setMode(1);
+				Printer.setMode(0);
 				System.out.println("Print mode set to verbose.");
 			}else if(cmd.toLowerCase().equals("quiet")){
-				Printer.setMode(0);
+				Printer.setMode(1);
 				System.out.println("Print mode set to quiet.");
 			}else {
 				System.out.println("Invalid input.");

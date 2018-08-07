@@ -123,11 +123,11 @@ public class FileHandler {
 	 * */
 	public boolean prepareWrite(String file) {
 
-		System.out.println("Prepare Writing File: " + file);
+		Printer.printInfo("Prepare Writing File: " + file);
 		
 		File dir = new File(directory);
 		long space = dir.getUsableSpace();
-		System.out.println(directory + ", available space: " + space);
+		Printer.printInfo(directory + ", available space: " + space);
 		
 		if(space <= 0) {
 			System.out.println("ERROR: Not Enough Space.");
