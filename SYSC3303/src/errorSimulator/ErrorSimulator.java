@@ -188,7 +188,7 @@ public class ErrorSimulator {
 				System.out.println("Invalid input, please try again.");
 				errorCodeError();
 			}
-		}else {
+		}else if(packetChoice == 3 || packetChoice == 4) {
 			System.out.println("---------- Error Code Error ----------");
 			System.out.println("    1. Invalid Opcode 		 (Error Code 4)");
 			System.out.println("    2. Invalid Packet Format (Error Code 4)");
@@ -229,7 +229,49 @@ public class ErrorSimulator {
 					System.out.println("Invalid input, please try again.");
 					errorCodeError();
 					break;
+				}
+			}catch(NumberFormatException e) {
+				System.out.println("Invalid input, please try again.");
+				errorCodeError();
 			}
+			
+		}else {
+			System.out.println("---------- Error Code Error ----------");
+			System.out.println("    1. Invalid Opcode 		 (Error Code 4)");
+			System.out.println("    2. Invalid Packet Format (Error Code 4)");
+			System.out.println("    3. Unknown User TID   	 (Error Code 5)");
+			System.out.println("    4. Back to Error main menu");
+			System.out.println(">>>>>>>> input quit to exit this program");
+			
+			ec = scan.next();
+			if(ec.equals("quit")) {
+				stop();
+				return;
+			}
+			
+			try {
+				errorChoice = Integer.valueOf(ec);
+				
+				switch(errorChoice) {
+				case 1:
+					listener.setErrorChoice(errorChoice);
+					askErrorOpcode();
+					break;
+				case 2:
+					listener.setErrorChoice(errorChoice);
+					listener.confirmChange();
+					break;
+				case 3:
+					listener.setErrorChoice(errorChoice);
+					listener.confirmChange();
+					break;
+				case 4:
+					break;
+				default:
+					System.out.println("Invalid input, please try again.");
+					errorCodeError();
+					break;
+				}
 			}catch(NumberFormatException e) {
 				System.out.println("Invalid input, please try again.");
 				errorCodeError();

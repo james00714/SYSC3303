@@ -80,8 +80,6 @@ public class ESThread extends Thread{
 
 	private void tryError(DatagramPacket receivedPacket){
 		rp.parseRequest(receivedPacket.getData(), receivedPacket.getLength());
-
-		
 		
 		if(ifError(receivedPacket)) {
 			System.out.println("Target packet received, making error...");
@@ -247,8 +245,8 @@ public class ESThread extends Thread{
 					transferPacket(modifyOpcode(receivedPacket, errorOpcode),receiveSendSocket);
 					break;
 				case 2: 
-					System.out.println("Modify Block number for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
-					transferPacket(modifyBlockNum(receivedPacket),receiveSendSocket);
+					System.out.println("Modify Format for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
+					transferPacket(modifyFormat(receivedPacket),receiveSendSocket);
 					break;
 				case 3: 
 					System.out.println("Modify Packet size for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
@@ -271,8 +269,32 @@ public class ESThread extends Thread{
 					break;
 			}
 		}else {
-			System.out.println("Error Packet received, transferring...");
-			transferPacket(receivedPacket,receiveSendSocket);
+			switch(errorChoice) {
+			case 1: 
+				System.out.println("Modify Opcode for target" + parsePacketName(rp.getType()) + "Packet...");
+				transferPacket(modifyOpcode(receivedPacket, errorOpcode),receiveSendSocket);
+				break;
+			case 2: 
+				System.out.println("Modify Packet Format for target " + parsePacketName(rp.getType()) + "Packet...");
+				transferPacket(modifyFormat(receivedPacket),receiveSendSocket);
+				break;
+			case 3: 
+				System.out.println("Making Error Code 5 for target " + parsePacketName(rp.getType()) + "Packet...");
+				////error code 5
+				try {
+					errorSocket = new DatagramSocket();
+				} catch (SocketException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				transferPacket(receivedPacket,errorSocket);
+				newSocket = true;
+				break;
+			default:
+				System.out.println("invalid error choice"); 
+				break;
+			}
+				
 		}
 	}
 	
@@ -282,7 +304,10 @@ public class ESThread extends Thread{
 			sendData[i] = receivedPacket.getData()[i];
 		}
 		
+		
 		sendData[1] = (byte) opcode;
+		
+		
 		
 		System.out.println("Previous Opcode: 0" + rp.getType() + "    After Change: 0" + opcode);
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
@@ -379,22 +404,15 @@ public class ESThread extends Thread{
 		return packet;
 	}
 	
-	public DatagramPacket modifyBlockNum(DatagramPacket receivedPacket) {
+	public DatagramPacket modifyFormat(DatagramPacket receivedPacket) {
 		
 		System.out.println("receivedPacket.getLength(): " + receivedPacket.getLength());
 		
 		byte[] sendData = new byte[receivedPacket.getLength()-2];
 		
-		sendData[0] = 0;
-		sendData[1] = (byte) rp.getType();
-		
-		if(errorPacket == 3) {
-			for(int i = 0; i <rp.getFileData().length; i++) {
-				sendData[2+i]= rp.getFileData()[i];
-			}
-		}
-		
-		System.out.println("Delete Block Number for received packet");
+		sendData[0] = 1;
+	
+		System.out.println("Previous Opcode Format: 0" + rp.getType() + "After Change: 1" +  rp.getType());
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
