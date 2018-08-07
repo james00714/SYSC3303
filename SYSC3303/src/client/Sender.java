@@ -5,6 +5,7 @@ package client;
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
 public class Sender {
 	private Client c;
@@ -35,18 +36,17 @@ public class Sender {
 	 * Receive packet
 	 */
 	public void Receiver () throws IOException{
+		String re;
+		boolean resend = true;
 		if (c.getFig() == "1"){
 			System.out.println("Client: waiting a packet...");
-
 		}
-		
 		byte data[] = new byte[1024];
 		receivePacket = new DatagramPacket(data, data.length);
 		sendReceiveSocket.setSoTimeout(3000);
 
 		try {
 			sendReceiveSocket.receive(receivePacket);
-
 			if (receivePacket.getPort() == -1){
 				return;
 			}
@@ -56,12 +56,25 @@ public class Sender {
 			end++;
 			System.out.println("Timeout "+ end + " time(s)");
 
-			if(end == TIMEOUTMAX) {
+			if (end == 1){
+				Scanner sc = new Scanner(System.in);
+				System.out.println("Do you want to keep Resending? <Y/N>");
+				re = sc.next();
+				
+				if (re.equals("N")){
+					resend = false;
+				}
+				
+			}
+			
+			
+			if(end == TIMEOUTMAX || resend == false) {
 				end = 0;
 				System.out.println("ERROR: No Response From Server, closing transmission.");
 				continueListen = false;
 				return;
 			}
+		
 			if (sendPacket.getData()[1] == 1 ){
 				System.out.println("Resending RRQ");
 				//	System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
