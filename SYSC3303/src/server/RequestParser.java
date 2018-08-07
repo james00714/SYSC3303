@@ -22,7 +22,7 @@ public class RequestParser {
 	 * @param	len		effective length
 	 * */
 	public void parseRequest(byte[] data, int len) {
-		
+		correctFormat = true;
 		length = len;
 		type = data[1];
 		positionOf0= new ArrayList<Integer>();

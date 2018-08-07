@@ -219,7 +219,6 @@ public class RequestHandler extends Thread{
 		}else {
 			System.out.println(ID + "ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			continueListen = false;
 		}
 	}
 	
@@ -260,7 +259,6 @@ public class RequestHandler extends Thread{
 		}else {
 			System.out.println(ID + "ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			continueListen = false;
 		}
 	}
 	
@@ -326,7 +324,7 @@ public class RequestHandler extends Thread{
 	public void SendErrorPacket(int errorCode, String msg){
 		
 		System.out.println(ID + "Sending ERROR packet, code: " + errorCode);
-		System.out.println(ID + "	     ERROR message: " + msg);
+		System.out.println(ID + "ERROR message: " + msg);
 		
 		byte[] sendData = new byte[5 + msg.length()];
 		byte[] msgData = msg.getBytes();
@@ -375,6 +373,12 @@ public class RequestHandler extends Thread{
 		System.out.println(ID + "ERROR packet Received.");
 		System.out.println(ID + "ERROR code: " + code);
 		System.out.println(ID + "ERROR message: " + msg);
+		if(myClient != null)
+			try {
+				myClient.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		continueListen = false;
 	}
 	

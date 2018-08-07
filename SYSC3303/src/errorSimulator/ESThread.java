@@ -221,14 +221,10 @@ public class ESThread extends Thread{
 					transferPacket(modifyFilename(receivedPacket, errorFilename),receiveSendSocket); 
 					break;
 				case 4: 
-					System.out.println("Modify Packet size for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyPacketSize(receivedPacket, errorPacketSize),receiveSendSocket); 
-					break;
-				case 5: 
 					System.out.println("Modify Packet format for target" + parsePacketName(rp.getType()) + " Packet ...");
 					transferPacket(modifyPacketFormat(receivedPacket, errorPacketFormat),receiveSendSocket); 
 					break;
-				case 6: 
+				case 5: 
 					System.out.println("Making Error Code 5 for target" + parsePacketName(rp.getType()) + " Packet ...");
 					transferPacket(modifyOpcode(receivedPacket, 3),receiveSendSocket); 
 					break;
@@ -408,9 +404,14 @@ public class ESThread extends Thread{
 		
 		System.out.println("receivedPacket.getLength(): " + receivedPacket.getLength());
 		
-		byte[] sendData = new byte[receivedPacket.getLength()-2];
+		byte[] sendData = new byte[receivedPacket.getLength()];
+		
+		for(int i = 0; i < receivedPacket.getLength(); i++) {
+			sendData[i] = receivedPacket.getData()[i];
+		}
 		
 		sendData[0] = 1;
+		
 	
 		System.out.println("Previous Opcode Format: 0" + rp.getType() + "After Change: 1" +  rp.getType());
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());

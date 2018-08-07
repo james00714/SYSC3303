@@ -138,10 +138,9 @@ public class ErrorSimulator {
 			System.out.println("    1. Invalid Mode 		 (Error Code 4)");
 			System.out.println("    2. Invalid Opcode 		 (Error Code 4)");
 			System.out.println("    3. Invalid Filename 	 (Error Code 4)");
-			System.out.println("    4. Invalid Packet Size   (Error Code 4)");
-			System.out.println("    5. Invalid Packet Format (Error Code 4)");
-			System.out.println("    6. Unknown User TID   	 (Error Code 5)");
-			System.out.println("    7. Back to Error main menu");
+			System.out.println("    4. Invalid Packet Format (Error Code 4)");
+			System.out.println("    5. Unknown User TID   	 (Error Code 5)");
+			System.out.println("    6. Back to Error main menu");
 			System.out.println(">>>>>>>> input quit to exit this program");
 			
 			ec = scan.next();
@@ -167,17 +166,13 @@ public class ErrorSimulator {
 						break;
 					case 4:
 						listener.setErrorChoice(errorChoice);
-						askInvalidPacketSize();
+						askInvalidPacketFormat();
 						break;
 					case 5:
 						listener.setErrorChoice(errorChoice);
-						askInvalidPacketFormat();
-						break;
-					case 6:
-						listener.setErrorChoice(errorChoice);
 						listener.confirmChange();
 						break;
-					case 7:
+					case 6:
 						break;
 					default:
 						System.out.println("Invalid input, please try again.");
