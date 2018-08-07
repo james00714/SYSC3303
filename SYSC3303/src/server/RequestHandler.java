@@ -210,7 +210,7 @@ public class RequestHandler extends Thread{
 					continueListen = false;
 					return;
 				}
-			}else if(myClient.getBlockNum() == (block - 1)){
+			}else if(block == (myClient.getBlockNum() - 1)){
 				System.out.println(ID + "ERROR: Previous data block received, resending ACK packet...");
 				sendPacket(sendPacket);
 			}else{
@@ -229,7 +229,7 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleACK(int block) throws IOException {
 		
-		Printer.printInfo(ID + "Data Packet Received.");
+		Printer.printInfo(ID + "ACK Packet Received.");
 		Printer.printInfo(ID + "Block#: " + block);
 		
 		if(myClient != null) {
@@ -254,7 +254,6 @@ public class RequestHandler extends Thread{
 					}
 					SendDataPacket(fileData, myClient.getBlockNum());
 				}
-							
 			}else{
 				System.out.println(ID + "ERROR: Ignoring wrong ACK package received.");
 			}

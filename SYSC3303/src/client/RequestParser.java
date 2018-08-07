@@ -75,11 +75,18 @@ public class RequestParser {
 	 *	Out: block number
 	 * */
 	private int parseBlockNum(byte[] data) {
-		int left = data[2];
-		int right = data[3];
-		if(left < 0) left += 256;
-		if(right < 0) right += 256;
-		return left * 256 + right;
+		return parseBlockNum(data[2], data[3]);
+	}
+	
+	/*
+	 *	Static method to parse block number
+	 *	@param	a	b
+	 *	@return		block number
+	 * */
+	public static int parseBlockNum(int a, int b) {
+		if(a < 0) a += 256;
+		if(b < 0) b += 256;
+		return a * 256 + b;
 	}
 
 	/*
