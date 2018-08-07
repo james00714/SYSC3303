@@ -168,7 +168,8 @@ public class Sender {
 		System.out.println("Received ACK packet.");
 		byte [] send; 
 		int blockNum = RP.getBlockNum();
-
+		
+		
 		if (blockNum == blockNumber){
 			if(finalBlock == blockNum) {
 				System.out.println("Transfer Complete");
