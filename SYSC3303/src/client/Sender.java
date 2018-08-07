@@ -239,7 +239,7 @@ public class Sender {
 			}
 		}else if (blockNum < blockNumber) {
 			System.out.println("Error, ignoring invalid block received");
-			System.out.println("Duplicate ACK packet received (delayed)");
+			System.out.println("Duplicate ACK packet received (duplicated)");
 		}else{
 			System.out.println("Error, ignoring invalid block received");
 			System.out.println("packet bk number "+blockNum+" VS current bk number "+ blockNumber+"");
