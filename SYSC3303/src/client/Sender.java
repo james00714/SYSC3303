@@ -42,14 +42,13 @@ public class Sender {
 
 		try {
 			sendReceiveSocket.receive(receivePacket);
-	//		TID = receivePacket.getPort();
 
-			//		System.out.println("type: "+type );
+			if (receivePacket.getPort() == -1){
+				return;
+			}
 			end = 0;
 			PrintReceiver(receivePacket);
 		} catch(SocketTimeoutException e) {
-			//e.printStackTrace();
-			//System.exit(1);
 			end++;
 			System.out.println("Timeout "+ end + " time(s)");
 
@@ -59,12 +58,25 @@ public class Sender {
 				continueListen = false;
 				return;
 			}
-			if(currentRequest.equals("2") && sendPacket.getData()[1] == 3 ) {
-				System.out.println("Resending...");
-				System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
+			if (sendPacket.getData()[1] == 1 ){
+				System.out.println("Resending RRQ");
+				//	System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
 				sendReceiveSocket.send(sendPacket);
-			}else {
-				System.out.println("Waiting...");
+			}else if ( sendPacket.getData()[1] == 2 ){
+				System.out.println("Resending WRQ");
+				//	System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
+				sendReceiveSocket.send(sendPacket);
+			}
+
+			else{
+				//resend data
+				if(currentRequest.equals("2") && sendPacket.getData()[1] == 3 ) {
+					System.out.println("Resending...");
+					System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
+					sendReceiveSocket.send(sendPacket);
+				}else {
+					System.out.println("Waiting...");
+				}
 			}
 			Receiver ();
 		}	
@@ -93,8 +105,10 @@ public class Sender {
 				}
 			}
 		}else{
-			System.out.println("Error. Wrong packet type.");
-			SendErrorPacket(4, "Illegal TFTP Operation");
+			if(TID != -1){
+				System.out.println("Error. Wrong packet type.");
+				SendErrorPacket(4, "Illegal TFTP Operation");
+			}
 			continueListen = false;
 		}
 	}
@@ -175,8 +189,8 @@ public class Sender {
 		System.out.println("Received ACK packet.");
 		byte [] send; 
 		int blockNum = RP.getBlockNum();
-		
-		
+
+
 		if (blockNum == blockNumber){
 			if(finalBlock == blockNum) {
 				System.out.println("Transfer Complete");
@@ -331,11 +345,6 @@ public class Sender {
 		}
 
 		send[3+length.length + length2.length] = 0;
-
-		System.out.println("printing out byte array");
-		for (int i = 0; i < send.length; i++) {
-			System.out.println(send[i]);
-		}
 		SendPacket (send);
 	}
 
@@ -363,14 +372,14 @@ public class Sender {
 	 */
 	public void Close (){
 		if(sendReceiveSocket != null)
-		sendReceiveSocket.close();
+			sendReceiveSocket.close();
 	}
 
 	/*
 	 * Start the client
 	 */
 	public void start (Client c, int portNum) throws IOException{
-	//	System.out.println("Normal mode selected");
+		//	System.out.println("Normal mode selected");
 		receivePacket = null;
 		TID = -1;
 		newPort();

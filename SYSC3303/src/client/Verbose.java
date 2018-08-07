@@ -26,7 +26,7 @@ public class Verbose {
 		}
 		if (RP.getType() == 4) System.out.println("Type: ACK");
 		System.out.println("Packet Length: " + len);
-		System.out.print("Containing: ");
+		//System.out.print("Containing: ");
 
 		if (RP.getType() == 3 || RP.getType() == 4) {
 			int blockNum = RP.getBlockNum();
@@ -36,8 +36,8 @@ public class Verbose {
 		}
 
 		// Form a String from the byte array.
-		String received = new String(receivePacket.getData(),0,len);   
-		System.out.println(received);
+	//	String received = new String(receivePacket.getData(),0,len);   
+	//	System.out.println(received);
 	}
 
 	/*
@@ -46,18 +46,24 @@ public class Verbose {
 	public void PrintSender(DatagramPacket sendPacket) {
 		RP = new RequestParser();
 		RP.parseRequest(sendPacket.getData(), sendPacket.getLength());
-		System.out.println("Client: Sending packet:");
+		System.out.println("Sending packet:");
 		System.out.println("To host: " + sendPacket.getAddress());
 		System.out.println("Destination host port: " + sendPacket.getPort());
 		int len = sendPacket.getLength();
+		if (RP.getType() == 3) {
+			System.out.println("Type: DATA");
+			System.out.println("DATA Length: " + (len-4));
+
+		}
+		if (RP.getType() == 4) System.out.println("Type: ACK");
 		System.out.println("Length: " + len);
-		System.out.print("Containing: ");
+	//	System.out.print("Containing: ");
 
 		if (RP.getType() == 3 || RP.getType() == 4) {
 			int blockNum = RP.getBlockNum();
 			System.out.println("BlockNumber: " +blockNum);
 		}
 
-		System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
+	//	System.out.println(new String(sendPacket.getData(),0,len)); // or could print "s"
 	}
 }
