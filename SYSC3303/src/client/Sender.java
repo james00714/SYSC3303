@@ -35,7 +35,11 @@ public class Sender {
 	 * Receive packet
 	 */
 	public void Receiver () throws IOException{
-		System.out.println("Client: waiting a packet...");
+		if (c.getFig() == "1"){
+			System.out.println("Client: waiting a packet...");
+
+		}
+		
 		byte data[] = new byte[1024];
 		receivePacket = new DatagramPacket(data, data.length);
 		sendReceiveSocket.setSoTimeout(3000);
@@ -186,7 +190,10 @@ public class Sender {
 	 * Deal with received ACK packet
 	 */
 	public void ACK (DatagramPacket receivePacket) throws IOException{
-		System.out.println("Received ACK packet.");
+		if (c.getFig() == "1"){
+			System.out.println("Received ACK packet.");
+
+		}		
 		byte [] send; 
 		int blockNum = RP.getBlockNum();
 
