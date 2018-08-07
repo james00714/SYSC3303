@@ -221,14 +221,10 @@ public class ESThread extends Thread{
 					transferPacket(modifyFilename(receivedPacket, errorFilename),receiveSendSocket); 
 					break;
 				case 4: 
-					System.out.println("Modify Packet size for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyPacketSize(receivedPacket, errorPacketSize),receiveSendSocket); 
-					break;
-				case 5: 
 					System.out.println("Modify Packet format for target" + parsePacketName(rp.getType()) + " Packet ...");
 					transferPacket(modifyPacketFormat(receivedPacket, errorPacketFormat),receiveSendSocket); 
 					break;
-				case 6: 
+				case 5: 
 					System.out.println("Making Error Code 5 for target" + parsePacketName(rp.getType()) + " Packet ...");
 					transferPacket(modifyOpcode(receivedPacket, 3),receiveSendSocket); 
 					break;
