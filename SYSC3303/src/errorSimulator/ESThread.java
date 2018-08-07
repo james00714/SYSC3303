@@ -245,8 +245,8 @@ public class ESThread extends Thread{
 					transferPacket(modifyOpcode(receivedPacket, errorOpcode),receiveSendSocket);
 					break;
 				case 2: 
-					System.out.println("Modify Block number for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
-					transferPacket(modifyBlockNum(receivedPacket),receiveSendSocket);
+					System.out.println("Modify Format for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
+					transferPacket(modifyFormat(receivedPacket),receiveSendSocket);
 					break;
 				case 3: 
 					System.out.println("Modify Packet size for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
@@ -276,7 +276,7 @@ public class ESThread extends Thread{
 				break;
 			case 2: 
 				System.out.println("Modify Packet Format for target " + parsePacketName(rp.getType()) + "Packet...");
-				transferPacket(modifyOpcode(receivedPacket, 1),receiveSendSocket);
+				transferPacket(modifyFormat(receivedPacket),receiveSendSocket);
 				break;
 			case 3: 
 				System.out.println("Making Error Code 5 for target " + parsePacketName(rp.getType()) + "Packet...");
@@ -304,11 +304,9 @@ public class ESThread extends Thread{
 			sendData[i] = receivedPacket.getData()[i];
 		}
 		
-		if(errorPacket == 5 && errorChoice == 3) {
-			sendData[0] = (byte) opcode;
-		}else {
-			sendData[1] = (byte) opcode;
-		}
+		
+		sendData[1] = (byte) opcode;
+		
 		
 		
 		System.out.println("Previous Opcode: 0" + rp.getType() + "    After Change: 0" + opcode);
@@ -406,22 +404,15 @@ public class ESThread extends Thread{
 		return packet;
 	}
 	
-	public DatagramPacket modifyBlockNum(DatagramPacket receivedPacket) {
+	public DatagramPacket modifyFormat(DatagramPacket receivedPacket) {
 		
 		System.out.println("receivedPacket.getLength(): " + receivedPacket.getLength());
 		
 		byte[] sendData = new byte[receivedPacket.getLength()-2];
 		
-		sendData[0] = 0;
-		sendData[1] = (byte) rp.getType();
-		
-		if(errorPacket == 3) {
-			for(int i = 0; i <rp.getFileData().length; i++) {
-				sendData[2+i]= rp.getFileData()[i];
-			}
-		}
-		
-		System.out.println("Delete Block Number for received packet");
+		sendData[0] = 1;
+	
+		System.out.println("Previous Opcode Format: 0" + rp.getType() + "After Change: 1" +  rp.getType());
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
 		return packet;
 	}
