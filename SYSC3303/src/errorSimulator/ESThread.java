@@ -18,6 +18,8 @@ public class ESThread extends Thread{
 	private int ID;
 	private boolean continueListen = true;
 	private InetAddress serverAddress;
+	private DatagramSocket errorSocket;
+	private boolean newSocket = false;
 	
 	public ESThread(int errorType, int errorChoice, int errorPacket, int blockChoice, int delayChoice, 
 			        int errorOp, String errorMode, String errorFilename, int errorPS,
@@ -66,7 +68,12 @@ public class ESThread extends Thread{
 		System.out.println("Packet received:");
 		while(continueListen) {
 			tryError(receivedPacket);
-			receive();
+			if(newSocket) {
+				receive(errorSocket);
+			}else {
+				receive(receiveSendSocket);
+			}
+			
 		}
 
 	}
@@ -89,7 +96,7 @@ public class ESThread extends Thread{
 			}
 
 		}else {	
-			transferPacket(receivedPacket);		
+			transferPacket(receivedPacket,receiveSendSocket);		
 		}
 	}
 
@@ -110,10 +117,10 @@ public class ESThread extends Thread{
 		return false;
 	}
   
-	public void sendPacket(DatagramPacket sendPacket) {
+	public void sendPacket(DatagramPacket sendPacket, DatagramSocket socket) {
 
 		try {
-			receiveSendSocket.send(sendPacket);
+			socket.send(sendPacket);
 			System.out.println("Error Simulator: Packet sent:");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -122,15 +129,15 @@ public class ESThread extends Thread{
 
 	} 
 
-	public void receive() {
+	public void receive(DatagramSocket socket) {
 		try {
-			receiveSendSocket.setSoTimeout(10000);
+			socket.setSoTimeout(10000);
 		} catch (SocketException e1) {
 			e1.printStackTrace();
 		}
 		try {
 			System.out.println("Receving a packet...");
-			receiveSendSocket.receive(receivedPacket);
+			socket.receive(receivedPacket);
 			
 			if(!ifClient(receivedPacket)) {
 				if(serverPort == 69) 
@@ -171,7 +178,7 @@ public class ESThread extends Thread{
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			transferPacket(receivedPacket);
+			transferPacket(receivedPacket,receiveSendSocket);
 		}else if(errorChoice == 3) {
 			if(rp.getType() == 3 || rp.getType() == 4) {
 				System.out.println("Duplicating Target" + parsePacketName(rp.getType()) + " Packet Block# : " + rp.getBlockNum());
@@ -179,21 +186,21 @@ public class ESThread extends Thread{
 				System.out.println("Duplicating Target" + parsePacketName(rp.getType()) + " Packet");
 			}
 			
-			transferPacket(receivedPacket);
-			transferPacket(receivedPacket);
+			transferPacket(receivedPacket,receiveSendSocket);
+			transferPacket(receivedPacket,receiveSendSocket);
 		}else {
 			System.out.println("invalid error choice");
 		}
 	}
 
-	public void transferPacket(DatagramPacket receivedPacket) {
+	public void transferPacket(DatagramPacket receivedPacket, DatagramSocket socket) {
 		System.out.println("Passing packet received...");
 		if(ifClient(receivedPacket)) {
 			sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), this.serverAddress, this.serverPort);
-			sendPacket(sendPacket);
+			sendPacket(sendPacket, socket);
 		}else {
 			sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), this.clientAddress, this.clientPort);
-			sendPacket(sendPacket);
+			sendPacket(sendPacket, socket);
 		}
 	}
 	
@@ -205,27 +212,27 @@ public class ESThread extends Thread{
 			switch(errorChoice) {
 				case 1: 
 					System.out.println("Modify Mode for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyMode(receivedPacket, errorMode)); 
+					transferPacket(modifyMode(receivedPacket, errorMode), receiveSendSocket); 
 					break;
 				case 2: 
 					System.out.println("Modify Opcode for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyOpcode(receivedPacket, errorOpcode)); 
+					transferPacket(modifyOpcode(receivedPacket, errorOpcode),receiveSendSocket); 
 					break;
 				case 3: 
 					System.out.println("Modify Filename for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyFilename(receivedPacket, errorFilename)); 
+					transferPacket(modifyFilename(receivedPacket, errorFilename),receiveSendSocket); 
 					break;
 				case 4: 
 					System.out.println("Modify Packet size for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyPacketSize(receivedPacket, errorPacketSize)); 
+					transferPacket(modifyPacketSize(receivedPacket, errorPacketSize),receiveSendSocket); 
 					break;
 				case 5: 
 					System.out.println("Modify Packet format for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferPacket(modifyPacketFormat(receivedPacket, errorPacketFormat)); 
+					transferPacket(modifyPacketFormat(receivedPacket, errorPacketFormat),receiveSendSocket); 
 					break;
 				case 6: 
-					System.out.println("Making Error Code 5555555555 for target" + parsePacketName(rp.getType()) + " Packet ...");
-					transferErrorFivePacket(receivedPacket); 
+					System.out.println("Making Error Code 5 for target" + parsePacketName(rp.getType()) + " Packet ...");
+					transferPacket(modifyOpcode(receivedPacket, 3),receiveSendSocket); 
 					break;
 				default: 
 					System.out.println("invalid error choice"); 
@@ -237,20 +244,27 @@ public class ESThread extends Thread{
 			switch(errorChoice) {
 				case 1: 
 					System.out.println("Modify Opcode for target" + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
-					transferPacket(modifyOpcode(receivedPacket, errorOpcode));
+					transferPacket(modifyOpcode(receivedPacket, errorOpcode),receiveSendSocket);
 					break;
 				case 2: 
 					System.out.println("Modify Block number for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
-					transferPacket(modifyBlockNum(receivedPacket));
+					transferPacket(modifyBlockNum(receivedPacket),receiveSendSocket);
 					break;
 				case 3: 
 					System.out.println("Modify Packet size for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
-					transferPacket(modifyPacketSize(receivedPacket, errorPacketSize)); 
+					transferPacket(modifyPacketSize(receivedPacket, errorPacketSize),receiveSendSocket); 
 					break;
 				case 4: 
-					System.out.println("Making Error Code 5555555555 for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
-					transferErrorFivePacket(receivedPacket); 
-					transferPacket(receivedPacket);
+					System.out.println("Making Error Code 5 for target " + parsePacketName(rp.getType()) + "Packet Block# : " + rp.getBlockNum() + "...");
+					////error code 5
+					try {
+						errorSocket = new DatagramSocket();
+					} catch (SocketException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					transferPacket(receivedPacket,errorSocket);
+					newSocket = true;
 					break;
 				default: 
 					System.out.println("invalid error choice"); 
@@ -258,7 +272,7 @@ public class ESThread extends Thread{
 			}
 		}else {
 			System.out.println("Error Packet received, transferring...");
-			transferPacket(receivedPacket);
+			transferPacket(receivedPacket,receiveSendSocket);
 		}
 	}
 	
@@ -276,6 +290,8 @@ public class ESThread extends Thread{
 	}
 	
 	public DatagramPacket modifyMode(DatagramPacket receivedPacket, String mode) {
+		
+		
 		byte[] errorMode = mode.getBytes();
 		byte[] sendData = new byte[4 + rp.getFilename().getBytes().length + errorMode.length];
 		System.out.println(rp.getFilename().getBytes().length);
@@ -383,26 +399,6 @@ public class ESThread extends Thread{
 		return packet;
 	}
 
-	public void transferErrorFivePacket(DatagramPacket receivedPacket) {
-
-		if(ifClient(receivedPacket)) {
-			System.out.println("Creating a new socket (Error code 5)...");
-			sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), this.serverAddress, this.serverPort);
-			
-			Thread err5C = new ESThread(0, 0, errorPacket, blockChoice, delayChoice, errorOpcode, errorMode, errorFilename, errorPacketSize, errorPacketFormat, sendPacket, serverAddress);
-
-			err5C.start();
-			
-		}else {
-			System.out.println("Creating a new socket (Error code 5)...");
-			sendPacket = new DatagramPacket(receivedPacket.getData(), receivedPacket.getLength(), this.clientAddress, this.clientPort);
-			
-			Thread err5S = new ESThread(0, 0, errorPacket, blockChoice, delayChoice, errorOpcode, errorMode, errorFilename, errorPacketSize, errorPacketFormat, sendPacket, clientAddress);
-
-			err5S.start();
-		}
-		
-	}
 
 	public boolean ifClient(DatagramPacket receivedPacket) {
 		if(receivedPacket.getPort() == clientPort && receivedPacket.getAddress().equals(clientAddress)) return true;
