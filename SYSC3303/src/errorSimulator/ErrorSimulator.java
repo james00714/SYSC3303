@@ -136,7 +136,7 @@ public class ErrorSimulator {
 		if(packetChoice == 1 || packetChoice == 2) {
 			System.out.println("---------- Error Code Error ----------");
 			System.out.println("    1. Invalid Mode 		 (Error Code 4)");
-			System.out.println("    2. Invalid Opcode 		 (Error Code 4 if new opcode is 3 or 4, else Error Code 5)");
+			System.out.println("    2. Invalid Opcode 		 (Error Code 4)");
 			System.out.println("    3. Invalid Filename 	 (Error Code 4)");
 			System.out.println("    4. Invalid Packet Size   (Error Code 4)");
 			System.out.println("    5. Invalid Packet Format (Error Code 4)");
