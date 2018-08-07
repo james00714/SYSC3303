@@ -399,6 +399,7 @@ public class ErrorSimulator {
 	public void askErrorFilename() {
 		System.out.println("---------- Please Input a new Filename ----------");
 		System.out.println("    Enter -1 to go back to Error Menu");
+		System.out.println("    Enter 0 to delete Filename");
 		System.out.println(">>>>>>>> input quit to exit this program");
 		
 		errorFilename = scan.next();
@@ -410,6 +411,10 @@ public class ErrorSimulator {
 		
 		if(errorFilename.equals("-1")) {
 			return;
+		}
+		
+		if(errorFilename.equals("0")) {
+			errorFilename = "";
 		}
 		
 		listener.setErrorFilename(errorFilename);
