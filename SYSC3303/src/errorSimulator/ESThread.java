@@ -80,8 +80,6 @@ public class ESThread extends Thread{
 
 	private void tryError(DatagramPacket receivedPacket){
 		rp.parseRequest(receivedPacket.getData(), receivedPacket.getLength());
-
-		
 		
 		if(ifError(receivedPacket)) {
 			System.out.println("Target packet received, making error...");
@@ -271,8 +269,32 @@ public class ESThread extends Thread{
 					break;
 			}
 		}else {
-			System.out.println("Error Packet received, transferring...");
-			transferPacket(receivedPacket,receiveSendSocket);
+			switch(errorChoice) {
+			case 1: 
+				System.out.println("Modify Opcode for target" + parsePacketName(rp.getType()) + "Packet...");
+				transferPacket(modifyOpcode(receivedPacket, errorOpcode),receiveSendSocket);
+				break;
+			case 2: 
+				System.out.println("Modify Packet Format for target " + parsePacketName(rp.getType()) + "Packet...");
+				transferPacket(modifyOpcode(receivedPacket, 1),receiveSendSocket);
+				break;
+			case 3: 
+				System.out.println("Making Error Code 5 for target " + parsePacketName(rp.getType()) + "Packet...");
+				////error code 5
+				try {
+					errorSocket = new DatagramSocket();
+				} catch (SocketException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				transferPacket(receivedPacket,errorSocket);
+				newSocket = true;
+				break;
+			default:
+				System.out.println("invalid error choice"); 
+				break;
+			}
+				
 		}
 	}
 	
@@ -282,7 +304,12 @@ public class ESThread extends Thread{
 			sendData[i] = receivedPacket.getData()[i];
 		}
 		
-		sendData[1] = (byte) opcode;
+		if(errorPacket == 5 && errorChoice == 3) {
+			sendData[0] = (byte) opcode;
+		}else {
+			sendData[1] = (byte) opcode;
+		}
+		
 		
 		System.out.println("Previous Opcode: 0" + rp.getType() + "    After Change: 0" + opcode);
 		DatagramPacket packet = new DatagramPacket(sendData, sendData.length, receivedPacket.getAddress(),receivedPacket.getPort());
