@@ -8,12 +8,14 @@ public class ESListener extends Thread{
 	private DatagramPacket receivedPacket;
 	private DatagramSocket receiveSendSocket;
 	private int errorType,errorChoice, packetChoice, blockChoice, delayChoice;
-	private int errorOpcode, errorBlkNum, errorPacketSize, errorPacketFormat, errorTID;
-	private String errorMode,errorFilename, errorAddress;
+	private int errorOpcode, errorPacketSize, errorPacketFormat;
+	private String errorMode,errorFilename;
 	private int tempET,tempEC, tempPC, tempBC, tempDC;
-	private int tempEO, tempEB, tempEP, tempER,tempED;
-	private String tempEM, tempEF,tempEA;
+	private int tempEO, tempEP, tempER;
+	private String tempEM, tempEF;
+	private InetAddress tempIP;
 	private boolean lisRunning = false;
+	private InetAddress desIP;
 	
 	public ESListener() {
 		try {
@@ -47,10 +49,9 @@ public class ESListener extends Thread{
 		}
 		
 		
-		Thread normalThread = new ESThread(errorType, errorChoice, packetChoice,blockChoice,delayChoice,errorOpcode,
-											errorMode, errorFilename,errorBlkNum, errorPacketSize, errorPacketFormat,
-											errorTID, errorAddress,receivedPacket);
-		normalThread.start();
+		Thread t = new ESThread(errorType, errorChoice, packetChoice,blockChoice,delayChoice,errorOpcode,
+											errorMode, errorFilename, errorPacketSize, errorPacketFormat, receivedPacket, desIP);
+		t.start();
 	}
 	
 	public void setErrorType(int errorType) {
@@ -92,12 +93,7 @@ public class ESListener extends Thread{
 		this.tempEF = errorFilename;
 		System.out.println("Error Filename set to " + this.tempEF);
 	}
-	
-	public void setErrorBlkNum(int errorBlkNum){
-		this.tempEB = errorBlkNum;
-		System.out.println("Error Block Number set to " + this.tempEB);
-	}
-	
+
 	public void setErrorPacketSize(int errorPacketSize){
 		this.tempEP = errorPacketSize;
 		System.out.println("Error Packet Size set to " + this.tempEP);
@@ -108,15 +104,11 @@ public class ESListener extends Thread{
 		System.out.println("Error Packet Format set to " + this.tempER);
 	}
 	
-	public void setErrorTID(int errorTID) {
-		this.tempED = errorTID;
-		System.out.println("Error TID set to " + this.tempED);
+	public void setDesIP(InetAddress desIP) {
+		this.tempIP = desIP;
+		System.out.println("Destination IP address set to " + this.tempIP);
 	}
 	
-	public void setErrorAddress(String errorAddress) {
-		this.tempEA = errorAddress;
-		System.out.println("Error InetAddress set to " + this.tempEA);
-	}
 	public void confirmChange() {
 		errorType = tempET;
 		errorChoice = tempEC;
@@ -128,9 +120,7 @@ public class ESListener extends Thread{
 		errorFilename = tempEF;
 		errorPacketSize = tempEP;
 		errorPacketFormat = tempER;
-		errorBlkNum = tempEB;
-		errorTID = tempED;
-		errorAddress = tempEA;
+		desIP = tempIP;
 		System.out.println("Error configration submited.");
 		if(lisRunning == false) {
 			lisRunning = true;
