@@ -15,16 +15,24 @@ public class Verbose {
 	public void PrintReceiverV (DatagramPacket receivePacket) {
 		RP = new RequestParser();
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
-		System.out.println("Client: Packet received:");
+		System.out.println("Packet received:");
 		System.out.println("From host: " + receivePacket.getAddress());
 		System.out.println("Host port: " + receivePacket.getPort());
 		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
+		if (RP.getType() == 3) {
+			System.out.println("Type: DATA");
+			System.out.println("DATA Length: " + (len-4));
+
+		}
+		if (RP.getType() == 4) System.out.println("Type: ACK");
+		System.out.println("Packet Length: " + len);
 		System.out.print("Containing: ");
 
 		if (RP.getType() == 3 || RP.getType() == 4) {
 			int blockNum = RP.getBlockNum();
 			System.out.println("BlockNumber: " +blockNum);
+
+
 		}
 
 		// Form a String from the byte array.

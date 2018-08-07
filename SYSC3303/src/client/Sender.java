@@ -12,7 +12,7 @@ public class Sender {
 	private DatagramPacket receivePacket, sendPacket;
 	private FileHandler fileHandler;
 	private RequestParser RP;
-	private int blockNumber = 0, port, finalBlock, TID, end = 0;
+	private int blockNumber = 0, port, finalBlock, TID = -1, end = 0;
 	private String filename, currentRequest;
 	private boolean continueListen = true;
 	private static final int TIMEOUTMAX = 4;
@@ -42,7 +42,7 @@ public class Sender {
 
 		try {
 			sendReceiveSocket.receive(receivePacket);
-			TID = receivePacket.getPort();
+	//		TID = receivePacket.getPort();
 
 			//		System.out.println("type: "+type );
 			end = 0;
@@ -76,18 +76,26 @@ public class Sender {
 	public void ReceiveHandler (DatagramPacket receivePacket) throws IOException{
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
 
-		if (receivePacket.getPort() != TID && receivePacket.getPort() != -1) {
-			System.out.println("Unknown TID error");
-			SendErrorPacket(5, "Unknown transfer ID");
-		}else {
-			switch (RP.getType()) {
-			case 3:	DATA(receivePacket);
-			break;
-			case 4:	ACK(receivePacket);
-			break;
-			case 5:	ERR();
-			break;
+		if(RP.ifCorrect()){
+			if(TID == -1)
+				TID = receivePacket.getPort();
+			if (receivePacket.getPort() != TID && receivePacket.getPort() != -1) {
+				System.out.println("Unknown TID error");
+				SendErrorPacket(5, "Unknown transfer ID");
+			}else {
+				switch (RP.getType()) {
+				case 3:	DATA(receivePacket);
+				break;
+				case 4:	ACK(receivePacket);
+				break;
+				case 5:	ERR();
+				break;
+				}
 			}
+		}else{
+			System.out.println("Error. Wrong packet type.");
+			SendErrorPacket(4, "Illegal TFTP Operation");
+			continueListen = false;
 		}
 	}
 
@@ -362,8 +370,9 @@ public class Sender {
 	 * Start the client
 	 */
 	public void start (Client c, int portNum) throws IOException{
-		System.out.println("Normal mode selected");
+	//	System.out.println("Normal mode selected");
 		receivePacket = null;
+		TID = -1;
 		newPort();
 		this.port = portNum;
 		currentRequest = c.getRequest();
