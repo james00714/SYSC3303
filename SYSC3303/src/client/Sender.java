@@ -20,7 +20,6 @@ public class Sender {
 	public Sender(Client c){
 		this.c = c;
 		RP = new RequestParser();
-
 	}
 
 	public void newPort () {
@@ -364,6 +363,7 @@ public class Sender {
 	 * Close the socket
 	 */
 	public void Close (){
+		if(sendReceiveSocket != null)
 		sendReceiveSocket.close();
 	}
 

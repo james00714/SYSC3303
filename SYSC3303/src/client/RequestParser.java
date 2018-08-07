@@ -11,7 +11,6 @@ public class RequestParser {
 	private byte[] fileData;
 	private String filename, errorMsg;
 	private ArrayList<Integer> positionOf0;  // Record the position of byte 0
-	private boolean correctFormat = true;
 
 	public RequestParser() {}
 
@@ -37,7 +36,6 @@ public class RequestParser {
 			if(type == 3) {
 				if(length > 516) {
 					System.out.println("Illegal Opeartion: Wrong DATA Size");
-					correctFormat = false;
 				}else {
 					fileData = parseFileData(data);
 					blockNum = parseBlockNum(data);
@@ -45,7 +43,6 @@ public class RequestParser {
 			}else {
 				if(length != 4) {
 					System.out.println("Illegal Opeartion: Wrong ACK Size");
-					correctFormat = false;
 				}else {
 					blockNum = parseBlockNum(data);
 				}		
@@ -57,7 +54,6 @@ public class RequestParser {
 					data[3] < 0 ||
 					data[3] > 7) {
 				System.out.println("Illegal Opeartion: Wrong Format");
-				correctFormat = false;
 			}
 			errorCode = parseErrorCode(data);
 			errorMsg = parseErrorMsg(data);
