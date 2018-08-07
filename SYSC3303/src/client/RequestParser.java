@@ -149,17 +149,6 @@ public class RequestParser {
 	}
 	
 	/*
-	 *	Static method to parse block number
-	 *	@param	a	b
-	 *	@return		block number
-	 * */
-	public static int parseBlockNum(int a, int b) {
-		if(a < 0) a += 256;
-		if(b < 0) b += 256;
-		return a * 256 + b;
-	}
-	
-	/*
 	 *	Method to parse file data
 	 *	@param	data	data received
 	 *	@return			file data
