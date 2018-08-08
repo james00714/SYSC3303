@@ -145,7 +145,7 @@ public class RequestHandler extends Thread{
 		}else {
 			//	ERROR WRQ RRQ not finished yet
 			System.out.println(ID + "ERROR: Previous WRQ/RRQ not finished yet");	
-			System.out.println(ID + "Ignoring RRQ received");	
+			System.out.println(ID + "Ignoring duplicate RRQ received");	
 		}
 		
 	}
@@ -179,7 +179,7 @@ public class RequestHandler extends Thread{
 		}else {
 			//	ERROR WRQ RRQ not finished yet
 			System.out.println(ID + "ERROR: Previous WRQ/RRQ not finished yet");	
-			System.out.println(ID + "Ignoring WRQ received");	
+			System.out.println(ID + "Ignoring duplicate WRQ received");	
 		}
 	}
 	
@@ -241,6 +241,14 @@ public class RequestHandler extends Thread{
 					continueListen = false;
 					return;
 				}else {
+					if(block == 65535) {
+						System.out.println(ID + "ERROR: Reached the file size limit (Block 65535).");
+						SendErrorPacket(0, "Reached the file size limit (Block 65535)");
+						System.out.println(ID + "Transfer Complete");
+						myClient.close();
+						continueListen = false;
+						return;
+					}
 					myClient.incrementBlockNum();
 					byte[] fileData = myClient.getFileHandler().readFile();
 					if(fileData == null) {

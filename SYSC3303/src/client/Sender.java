@@ -17,6 +17,7 @@ public class Sender {
 	private String filename, currentRequest;
 	private boolean continueListen = true;
 	private static final int TIMEOUTMAX = 4;
+	private Scanner sc = new Scanner(System.in);
 
 	public Sender(Client c){
 		this.c = c;
@@ -55,12 +56,10 @@ public class Sender {
 		} catch(SocketTimeoutException e) {
 			end++;
 			System.out.println("Timeout "+ end + " time(s)");
-
-			if (end > 0){
-				Scanner sc = new Scanner(System.in);
+			resend = true;
+			if (sendPacket.getData()[1] == 1 || sendPacket.getData()[1] == 2){
 				System.out.println("Do you want to Resend? <y/n>");
 				re = sc.next();
-				
 				if (re.equals("n")){
 					resend = false;
 				}
@@ -88,7 +87,6 @@ public class Sender {
 				//resend data
 				if(currentRequest.equals("2") && sendPacket.getData()[1] == 3 ) {
 					System.out.println("Resending...");
-					System.out.println(RequestParser.parseBlockNum(sendPacket.getData()[2], sendPacket.getData()[3]));
 					sendReceiveSocket.send(sendPacket);	
 				}else {
 					System.out.println("Waiting...");
@@ -105,7 +103,6 @@ public class Sender {
 		RP.parseRequest(receivePacket.getData(), receivePacket.getLength());
 
 		if(RP.ifCorrect()){
-	//		System.out.println("asdadasdasdsa");
 			if(TID == -1)
 				TID = receivePacket.getPort();
 			if (receivePacket.getPort() != TID && receivePacket.getPort() != -1) {
@@ -213,14 +210,19 @@ public class Sender {
 		}		
 		byte [] send; 
 		int blockNum = RP.getBlockNum();
-
-
 		if (blockNum == blockNumber){
+			
 			if(finalBlock == blockNum) {
 				System.out.println("Transfer Complete");
 				fileHandler.close();
 				continueListen = false;
 			}else {
+				if(blockNum == 65535) {
+					System.out.println("Error, Reached the file size limit (Block 65535).");
+					SendErrorPacket(0, "Reached the file size limit (Block 65535)");
+					continueListen = false;
+					return;
+				}
 				byte[] fileData = fileHandler.readFile();
 				int length = fileData.length;
 				blockNumber++;
@@ -401,6 +403,11 @@ public class Sender {
 	public void Close (){
 		if(sendReceiveSocket != null)
 			sendReceiveSocket.close();
+		try {
+			fileHandler.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/*
