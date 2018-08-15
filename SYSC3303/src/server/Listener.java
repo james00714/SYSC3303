@@ -48,7 +48,7 @@ public class Listener extends Thread{
 		
 		//	Wait for connections
 		try {
-			System.out.println("Listener : Waiting for request...");
+			System.out.println("\nListener : Waiting for request...");
 			sendReceiveSocket.receive(receivePacket);
 		} catch (IOException e) {
 			if(e.getMessage().equals("socket closed")) {
@@ -62,8 +62,7 @@ public class Listener extends Thread{
 			}		
 		}
 		
-		//	Display information
-		//	Can be achieved by a new UI class
+		
 		if(receivePacket.getPort() != -1){
 			displayReceived(receivePacket);
 			
@@ -90,11 +89,10 @@ public class Listener extends Thread{
 	*/
 	public void displayReceived(DatagramPacket receivePacket) {
 		
-		System.out.println("Server: Packet received:");
-		System.out.println("From host: " + receivePacket.getAddress());
-		System.out.println("Host port: " + receivePacket.getPort());
+		Printer.printInfo("Server: Packet received:");
+		Printer.printInfo("From host: " + receivePacket.getAddress());
+		Printer.printInfo("Host port: " + receivePacket.getPort());
 		int len = receivePacket.getLength();
-		System.out.println("Length: " + len);
-		
+		Printer.printInfo("Packet Length: " + len);
 	}
 }

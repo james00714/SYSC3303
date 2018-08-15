@@ -9,15 +9,23 @@ import java.net.UnknownHostException;
 import java.util.Scanner;
 
 public class Client {
-	private	String mode, request, fig;
+  
+	private	String mode, request, fig = "1";
 	private	String fileName;
-	private File check, space;
+	private File check;
 
 	private	boolean running = true;
-	private String ip, loc, location = "src\\client\\files";
+	private String destination, location = "src\\client\\files";
 	private InetAddress ipAddress;
+	private Scanner sc = new Scanner(System.in);
 
-	public Client (){}
+	public Client (){
+		try {
+			ipAddress = InetAddress.getLocalHost();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+	}
 
 	public String getMode (){
 		return this.mode;
@@ -38,113 +46,264 @@ public class Client {
 	public String getLocation () {
 		return this.location;
 	}
-	
+
 	public InetAddress getIpAddress () {
 		return this.ipAddress;
 	}
-	
-	
+
+
 	/*
 	 * Method for the UI
 	 * First ask user input for mode, then read/write request and finally output mode 
 	 */
 	public void menu () throws UnknownHostException{
-		Scanner sc = new Scanner(System.in);
-		System.out.println("Welcome to client V2 <Enter quit to quit anytime :(>");
-		System.out.println("Please enter the destination IP address");
-		ip = sc.next();
-		if (!ip.equals("quit")) {
-			ipAddress = InetAddress.getByName(ip);
-			System.out.println("Please select your mode:");
-			System.out.println("1. Normal  <Client, Server>");
-			System.out.println("2. Test  <Client, Error Simulator, Server>");
-			mode = sc.next();
-			if (!mode.equals("quit")) {
-				System.out.println("Please select your request");
-				System.out.println("1. RRQ <Read Request>");
-				System.out.println("2. WRQ <Write Request>");
-				request = sc.next();
-				if (!request.equals("quit")) {
-					System.out.println("Please select your location");
-					System.out.println("1. src\\client\\files\\");
-					System.out.println("2. I want my own space :p");
-					loc = sc.next();
-					if (!loc.equals("quit")) {		
-						if (loc.equals("2")) {
-							System.out.println("Please enter your location. Don't forget to enter \\");
-							location = sc.next();
-							//location = "src\\test\\files";
-						}
-						
-						System.out.println("Please enter your file Name ");
-						fileName = sc.next();
-						
-						//read request
-						if (request.equals("1")) {
-							if (!this.checkDisk(fileName)	) {
-								System.out.println("Disk full can't read.");
-								System.out.println	("Please delete file and come :)");
-							}
-
-
-							while (this.checkFile(fileName)) {
-								System.out.println("File already exist error.");
-								System.out.println	("Please enter a new file Name");
-								fileName = sc.next();
-							}
-						}
-						//write request
-						else if (request.equals("2")) {
-							while(true) {
-								if (fileName.equals("quit")) {
-									sc.close();
-									return;
-								}
-								if(!this.checkFile(fileName)) {
-									System.out.println("File not found error.");
-									System.out.println("Please re-enter your file Name ");
-									fileName = sc.next();
-									continue;
-								}
-								if(!this.permission(fileName)) {
-									System.out.println("Please enter a new file Name ");
-									fileName = sc.next();
-									continue;
-								}
-								break;
-							}
-						}else{
-							System.out.println("Error");
-							sc.close();
-						}
-
-						if(!fileName.equals("quit")) {
-							System.out.println("Please enter your mode for data");
-							System.out.println("1. Verbose");
-							System.out.println("2. Quiet");
-							fig = sc.next();		
-
-						}else {
-							sc.close();
-						}
-					}else {
-						sc.close();
-					}
-				}else {
-					sc.close();
-				}
-			}else {
-				sc.close();
-			}
+		
+		System.out.println("------Welcome to TFTP Client System------");
+		System.out.println("Please choose your operation: ");
+		System.out.println("\t1. RRQ");
+		System.out.println("\t2. WRQ");
+		System.out.println("\t3. Set Target IP");
+		System.out.println("\t4. Set Working Directory");
+		System.out.println("\t5. Set Print Mode (Quiet/Verbose)");
+		System.out.println("\t6. Quit");
+		String cmd = sc.next();
+		
+		switch(cmd){
+			case "1":
+				request = "1";
+				setRequest();
+				break;
+			case "2":
+				request = "2";
+				setRequest();
+				break;
+			case "3":
+				setIP();
+				menu();
+				break;
+			case "4":
+				chooseDir();
+				menu();
+				break;
+			case "5":
+				setPrintMode();
+				menu ();
+				break;
+			case "6":
+				running = false;
+				break;
+		    default:
+		    	System.out.println("Invalid Input, please try again.");
+		    	menu();
+		    	break;
 		}
 	}
 	
+	/*
+	 * Method to generate a request
+	 * */
+	private void setRequest() {
+		setTransferMode();
+	}
+
+	/*
+	 * Method to set transfer mode
+	 * Normal sends directly to server (69)
+	 * Test sends to the Error Simulator (23)
+	 * */
+	private void setTransferMode() {
+		System.out.println("Please select your mode:");
+		System.out.println("\t1. Normal  <Client, Server>");
+		System.out.println("\t2. Test  <Client, Error Simulator, Server>");
+		System.out.println("\t3. Back to main menu");
+		String cmd = sc.next();
+		
+		switch(cmd){
+		
+			case "1":
+				mode = "1";
+				System.out.println("Transfer mode set to Normal.");
+				setFilename();
+				break;
+			case "2":
+				mode = "2";
+				System.out.println("Transfer mode set to Test.");
+				setFilename();
+				break;
+			case "3":
+				try {
+					menu();
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
+				break;
+		    default:
+		    	System.out.println("Invalid Input, please try again.");
+		    	setTransferMode();
+		    	break;
+		}
+	}
 	
+	/*
+	 * Method to set and check the requested file 
+	 */
+	private void setFilename() {
+		System.out.println("Please enter your file name, enter back to return");
+		fileName = sc.next();
+		if(fileName.equals("back")) {
+			try {
+				menu();
+			} catch (UnknownHostException e) {
+				e.printStackTrace();
+			}
+		} else {
+			// check READ request
+			if (request.equals("1")) {
+				if (!checkDisk(fileName)) {
+					System.out.println("Disk full can't read.");
+					System.out.println	("Please delete file and come :)");
+					try {
+						menu();
+					} catch (UnknownHostException e) {
+						e.printStackTrace();
+					}
+				}
+				if (checkFile(fileName)) {
+					System.out.println("File already exist.");
+					setFilename();
+				}
+			}
+			// check WRITE request
+			else if (request.equals("2")) {
+				if(!this.checkFile(fileName)) {
+					System.out.println("File not found error.");
+					setFilename();
+				}
+				if(!this.permission(fileName)) {
+					System.out.println("Access denied.");
+					setFilename();
+				}			
+			}
+		}
+		
+	}
+	
+	/*
+	 * Method to set print mode
+	 * Verbose print all information
+	 * */
+	private void setPrintMode() {
+		System.out.println("Please enter your mode for data");
+		System.out.println("\t1. Verbose");
+		System.out.println("\t2. Quiet");
+		System.out.println("\t3. Back to main menu");
+		String cmd = sc.next();
+		
+		switch(cmd){
+		
+			case "1":
+				fig = "1";
+				System.out.println("Print mode set to Verbose.");
+				break;
+			case "2":
+				fig = "2";
+				System.out.println("Print mode set to Quiet.");
+				break;
+			case "3":
+				break;
+		    default:
+		    	System.out.println("Invalid Input, please try again.");
+		    	setPrintMode();
+		    	break;
+		}
+	}
+	
+	/*
+	 * Method to select directory
+	 * Default dir: src\client\files\
+	 * */
+	private void chooseDir(){
+		System.out.println("Please select your location");
+		System.out.println("\t1. src\\client\\files\\");
+		System.out.println("\t2. I have my own directory");
+		System.out.println("\t3. Back to main menu");
+		String cmd = sc.next();
+		
+		switch(cmd){
+		
+		case "1":
+			location = "src\\client\\files";
+			System.out.println("Dir set to src\\client\\files\\");
+			break;
+		case "2":
+			setDir();
+			break;
+		case "3":
+			break;
+	    default:
+	    	System.out.println("Invalid Input, please try again.");
+	    	chooseDir();
+	    	break;
+		}
+		
+	}
+	
+	/*
+	 * Method to set a user defined directory and check
+	 * */
+	private void setDir() {
+		System.out.println("Please enter your location, enter back to return.");
+		System.out.println("");
+		String dir = sc.next();
+		if(dir.equals("back")) return;
+		if(dir.charAt(dir.length()-1) != '\\')
+			dir += '\\';
+		File f = new File(dir);
+		if(f.isDirectory()) {
+			location = dir;
+			System.out.println("Working directory set to " + dir);
+		}else {
+			System.out.println("Directory not exists, please try again.");
+			setDir();
+		}
+	}
+	
+	/*
+	 * Method to set destination IP address
+	 * Default IP: localhost
+	 * */
+	private void setIP() throws UnknownHostException {
+		System.out.println("Please select your destination");
+		System.out.println("\t1. Local host");
+		System.out.println("\t2. I have my own destination");
+		System.out.println("\t3. Back to main menu");
+		String cmd = sc.next();
+		
+		switch(cmd){
+		
+		case "1":	
+			ipAddress = InetAddress.getLocalHost();
+			System.out.println("IP set to " + ipAddress.getHostName());
+			break;
+		case "2":
+			System.out.println("Please enter the destination IP address");
+			destination = sc.next();
+			ipAddress = InetAddress.getByName(destination);
+			System.out.println("IP set to " + ipAddress.getHostName());
+			break;
+		case "3":
+			break;
+	    default:
+	    	System.out.println("Invalid Input, please try again.");
+	    	setIP();
+	    	break;
+		}
+	}
+
 	//file not found
 	public boolean checkFile (String fileName) {
 		check = new File (location + "\\" + fileName);
 		if (check.exists()) {
-			System.out.println("File exist.");
 			return true;
 		}
 		return false;
@@ -173,9 +332,9 @@ public class Client {
 
 	//check disk full
 	public boolean checkDisk (String fileName) {
-		space = new File (location + "\\" + fileName);
-		if (space.getUsableSpace() > 0) {
-			System.out.println("Disk available space: " +space.getUsableSpace());
+		File check = new File (location);
+		if (check.getUsableSpace() > 0) {
+			System.out.println("Disk available space: " + check.getUsableSpace());
 			return true;
 		}
 		return false;
@@ -186,9 +345,9 @@ public class Client {
 	 */
 	public void start (Sender s) throws IOException{
 
-		if (mode.equals("quit") || request.equals("quit") || fileName.equals("quit") || fig.equals("quit")) {
-			running = false;
+		if (running == false) {
 			System.out.println("Thank your for using our program. Goodbye!");
+			sc.close();
 			s.Close();
 			//t.close();	
 		}else {
@@ -211,6 +370,7 @@ public class Client {
 		while(c.running) {
 			c.menu();
 			c.start(n);	
-		}			
+		}	
+		
 	}
 }

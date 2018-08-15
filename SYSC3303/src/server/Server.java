@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 public class Server{
 	
-	private final int port = 69;  // Port number
+	private static final int port = 69;  // Port number
 	private Listener myListener;
 	
 	public Server(){}
@@ -26,11 +26,41 @@ public class Server{
 		System.out.println("Server now online, input \"quit\" to end the server.");
 		
 		while(true) {
+			System.out.print("Server>");
 			cmd = sc.next();
 			if(cmd.toLowerCase().equals("quit")) {
 				stopServer();
 				sc.close();
 				break;
+			}else if(cmd.toLowerCase().equals("dir")){
+				System.out.println("Please provide the directory: ");
+				String dir = sc.next();
+				while(true) {
+					if(dir.equals("default")) {
+						FileHandler.setDefaultDir();
+						System.out.println("Working directory set to default.");
+						break;
+					}else if(dir.equals("back")){
+						break;
+					}else{
+						File f = new File(dir);
+						if(f.isDirectory()) {
+							FileHandler.setDir(dir);
+							System.out.println("Working directory set to " + dir);
+							break;
+						}else {
+							System.out.println("Directory not exists, please try again.");
+							System.out.println("Please provide the directory: ");
+							dir = sc.next();
+						}
+					}
+				}
+			}else if(cmd.toLowerCase().equals("verbose")){
+				Printer.setMode(0);
+				System.out.println("Print mode set to verbose.");
+			}else if(cmd.toLowerCase().equals("quiet")){
+				Printer.setMode(1);
+				System.out.println("Print mode set to quiet.");
 			}else {
 				System.out.println("Invalid input.");
 			}
@@ -47,8 +77,7 @@ public class Server{
 	}
 	
 	//	Server starts here
-	public static void main(String[] args) throws IOException{
-		
+	public static void main(String[] args) throws IOException{	
 		Server server = new Server();
 		server.start();
 	}

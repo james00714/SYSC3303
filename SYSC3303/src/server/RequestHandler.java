@@ -1,5 +1,4 @@
 /*
- * 
  * RequestHandler to handle each request
  * */
 
@@ -23,7 +22,7 @@ public class RequestHandler extends Thread{
 	private int length, finalBlock, TID;
 	private int terminate = 0;
 	private Client myClient;
-	private String ID, currentRequest;
+	private String ID, currentRequest = "";
 	private InetAddress TAddr;
 	private boolean continueListen = true;
 	
@@ -32,6 +31,7 @@ public class RequestHandler extends Thread{
 	 * */
 	public RequestHandler(DatagramPacket receivePacket) throws IOException {
 		
+		super(String.valueOf(receivePacket.getPort()));
 		myClient = null;
 		myPacket = receivePacket;
 		TID = receivePacket.getPort();
@@ -45,8 +45,7 @@ public class RequestHandler extends Thread{
 			System.exit(1);
 		}
 		
-		System.out.println(ID + "New Connection Established");
-		
+		System.out.println(ID + "New Connection Established");	
 	}
 	
 	/*
@@ -55,6 +54,7 @@ public class RequestHandler extends Thread{
 	public void run() {
 		
 		handleRequest();
+		
 		while(continueListen) {
 			try {
 				receiveFromClient();
@@ -64,6 +64,8 @@ public class RequestHandler extends Thread{
 				e.printStackTrace();
 			}
 		}
+		
+		System.out.println(ID + "Disconnected.");
 	}
 	
 	/*
@@ -71,7 +73,7 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleRequest() {
 		if(myPacket.getPort() != TID || myPacket.getAddress() != TAddr) {
-			System.out.println("ERROR: Unknown TID.");
+			System.out.println(ID + "ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
 			try{
 				receiveFromClient();
@@ -114,14 +116,15 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleRead(String filename) throws IOException {
 		
-		System.out.println("File Read Requst Received.");
-		System.out.println("Requested File: " + filename);
-			
+		System.out.println(ID + "File Read Requst Received.");
+		System.out.println(ID + "Requested File: " + filename);
+		System.out.println(ID + "Transfering...");
+		
 		if(myClient == null) {
 			//	Save client information and send first piece of data
 			myClient = new Client(myPacket, 1, new FileHandler(this));
 			if(Client.addToClients(myClient) == false) {
-				System.out.println("Invalid request, the client is currenly active.");
+				System.out.println(ID + "ERROR: Invalid request, the client is currently active.");
 				continueListen = false;
 				return;
 			}
@@ -130,20 +133,19 @@ public class RequestHandler extends Thread{
 			finalBlock = -1;
 			byte[] filedata = myClient.getFileHandler().readFile(filename);	
 			if(filedata == null) {
-				System.out.println(ID + "Disconnected.");
 				myClient.close();
 				continueListen = false;
 				return;
 			}
-			System.out.println("Loading File...");
+			Printer.printInfo(ID + "Loading File...");
 			if(filedata.length < 512) {
 				finalBlock = myClient.getBlockNum();
 			}
 			SendDataPacket(filedata, myClient.getBlockNum());
 		}else {
 			//	ERROR WRQ RRQ not finished yet
-			System.out.println("ERROR: Previous WRQ/RRQ not finished yet");	
-			System.out.println("ERROR: Ignoring RRQ received");	
+			System.out.println(ID + "ERROR: Previous WRQ/RRQ not finished yet");	
+			System.out.println(ID + "Ignoring duplicate RRQ received");	
 		}
 		
 	}
@@ -154,19 +156,20 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleWrite(String filename) throws IOException {
 		
-		System.out.println("File Write Requst Received.");
+		System.out.println(ID + "File Write Requst Received.");
+		System.out.println(ID + "Requested File: " + filename);
+		System.out.println(ID + "Transfering...");
 		
 		//	Create Client and save information into it
 		if(myClient == null) {
 			myClient = new Client(myPacket, 1, new FileHandler(this));
 			if(Client.addToClients(myClient) == false) {
-				System.out.println("Invalid request, the client is currenly active.");
+				System.out.println(ID + "ERROR£ºInvalid request, the client is currenly active.");
 				continueListen = false;
 				return;
 			}
 			currentRequest = "WRITE";
 			if(myClient.getFileHandler().prepareWrite(filename) == false) {
-				System.out.println(ID + "Disconnected.");
 				myClient.close();
 				continueListen = false;
 				return;
@@ -175,8 +178,8 @@ public class RequestHandler extends Thread{
 			
 		}else {
 			//	ERROR WRQ RRQ not finished yet
-			System.out.println("ERROR: Previous WRQ/RRQ not finished yet");	
-			System.out.println("ERROR: Ignoring WRQ received");	
+			System.out.println(ID + "ERROR: Previous WRQ/RRQ not finished yet");	
+			System.out.println(ID + "Ignoring duplicate WRQ received");	
 		}
 	}
 	
@@ -186,13 +189,14 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleData(int block, byte[] fileData) throws IOException {
 		
-		System.out.println("Data Packet Received.");
-				
+		Printer.printInfo(ID + "Data Packet Received.");
+		Printer.printInfo(ID + "Block#: " + block);
+		Printer.printInfo(ID + "Data length: " + fileData.length);
+		
 		if(myClient != null) {
 			if(block == myClient.getBlockNum()){
-				System.out.println("New Block Received, Writing...");
+				Printer.printInfo(ID + "Writing...");
 				if(myClient.getFileHandler().writeFile(fileData) == false) {
-					System.out.println(ID + "Disconnected.");
 					myClient.close();
 					continueListen = false;
 					return;
@@ -201,23 +205,20 @@ public class RequestHandler extends Thread{
 				sendACKPacket(myClient.getBlockNum() - 1);
 				if(myPacket.getLength() < 516) {
 					//	Reached the end of file
-					System.out.println("Transfer Complete");
-					System.out.println(ID + "Disconnected.");
+					System.out.println(ID + "Transfer Complete");
 					myClient.close();
 					continueListen = false;
 					return;
 				}
-			}else if(myClient.getBlockNum() == (block - 1)){
-				System.out.println("ERROR: Previous data block received, resending ACK packet...");
+			}else if(block == (myClient.getBlockNum() - 1)){
+				System.out.println(ID + "ERROR: Previous data block received, resending ACK packet...");
 				sendPacket(sendPacket);
 			}else{
-				System.out.println("ERROR: Ignoring wrong DATA package received.");
+				System.out.println(ID + "ERROR: Ignoring wrong DATA package received.");
 			}
 		}else {
-			System.out.println("ERROR: Unknown TID.");
+			System.out.println(ID + "ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			System.out.println(ID + "Disconnected.");	
-			continueListen = false;
 		}
 	}
 	
@@ -227,18 +228,27 @@ public class RequestHandler extends Thread{
 	 * */
 	public void handleACK(int block) throws IOException {
 		
-		System.out.println("ACK Packet Received.");
+		Printer.printInfo(ID + "ACK Packet Received.");
+		Printer.printInfo(ID + "Block#: " + block);
 		
 		if(myClient != null) {
 			if(block == myClient.getBlockNum()){
 				if(finalBlock == block) {
-					//	Client hdas received the last block
+					//	Client has received the last block
 					//	End thread
-					System.out.println("Transfer Complete");
+					System.out.println(ID + "Transfer Complete");
 					myClient.close();
 					continueListen = false;
 					return;
 				}else {
+					if(block == 65535) {
+						System.out.println(ID + "ERROR: Reached the file size limit (Block 65535).");
+						SendErrorPacket(0, "Reached the file size limit (Block 65535)");
+						System.out.println(ID + "Transfer Complete");
+						myClient.close();
+						continueListen = false;
+						return;
+					}
 					myClient.incrementBlockNum();
 					byte[] fileData = myClient.getFileHandler().readFile();
 					if(fileData == null) {
@@ -251,15 +261,12 @@ public class RequestHandler extends Thread{
 					}
 					SendDataPacket(fileData, myClient.getBlockNum());
 				}
-							
 			}else{
-				System.out.println("ERROR: Ignoring wrong ACK package received.");
+				System.out.println(ID + "ERROR: Ignoring wrong ACK package received.");
 			}
 		}else {
-			System.out.println("ERROR: Unknown TID.");
+			System.out.println(ID + "ERROR: Unknown TID.");
 			SendErrorPacket(5, "Unknown transfer ID.");
-			System.out.println(ID + "Disconnected.");
-			continueListen = false;
 		}
 	}
 	
@@ -324,7 +331,8 @@ public class RequestHandler extends Thread{
 	 * */
 	public void SendErrorPacket(int errorCode, String msg){
 		
-		System.out.println("Sending error packet, code " + errorCode);
+		System.out.println(ID + "Sending ERROR packet, code: " + errorCode);
+		System.out.println(ID + "ERROR message: " + msg);
 		
 		byte[] sendData = new byte[5 + msg.length()];
 		byte[] msgData = msg.getBytes();
@@ -349,15 +357,18 @@ public class RequestHandler extends Thread{
 		} catch (SocketTimeoutException e) {
 			terminate += 1;
 			System.out.println(ID + "Time out " + terminate + ".");
+			
+			//	close connection
 			if(terminate == TIMEOUTMAX) {
-				System.out.println(ID + "ERROR: No Response From Client, Disconnected.");
-				myClient.close();
+				System.out.println(ID + "ERROR: No Response From Client.");
+				if(myClient != null) myClient.close();
 				continueListen = false;
 				return;
 			}
+			
+			//	if current request is RRQ, send previous data packet again
 			if(currentRequest.equals("READ")) {
-
-				System.out.println("Resending...");
+				System.out.println(ID + "Resending previous DATA packet...");
 				sendReceiveSocket.send(sendPacket);
 			}else {
 				System.out.println("Waiting...");
@@ -367,16 +378,29 @@ public class RequestHandler extends Thread{
 	}
 	
 	public void handleERROR(int code, String msg) {
-		System.out.println("ERROR packet Received.");
-		System.out.println("Client ERROR : " + msg);
-		System.out.println(ID + "Disconnected.");
+		System.out.println(ID + "ERROR packet Received.");
+		System.out.println(ID + "ERROR code: " + code);
+		System.out.println(ID + "ERROR message: " + msg);
+		if(myClient != null)
+			try {
+				myClient.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		continueListen = false;
 	}
 	
 	public void displaySend(DatagramPacket packet) {
-		System.out.println(ID + "\tSending packet...");
-		System.out.println(ID + "\tDestination:\t" + packet.getAddress());
-		System.out.println(ID + "\tPort:\t" + packet.getPort());
-		System.out.println(ID + "\tType:\t" + TYPES[packet.getData()[1] - 1]);
-		System.out.println(ID + "\tLength:\t" + packet.getData().length);
+		Printer.printInfo(ID + "\tSending packet...");
+		Printer.printInfo(ID + "\tDestination:\t" + packet.getAddress());
+		Printer.printInfo(ID + "\tPort:\t" + packet.getPort());
+		Printer.printInfo(ID + "\tType:\t" + TYPES[packet.getData()[1] - 1]);
+		Printer.printInfo(ID + "\tPacket Length:\t" + packet.getData().length);
+		if(packet.getData()[1] == 3) {
+			Printer.printInfo(ID + "\tBlock#:\t" + RequestParser.parseBlockNum(packet.getData()[2], packet.getData()[3]));
+			Printer.printInfo(ID + "\tData length:\t" + (packet.getLength() - 4));
+		}else if(packet.getData()[1] == 4) {
+			Printer.printInfo(ID + "\tBlock#:\t" + RequestParser.parseBlockNum(packet.getData()[2], packet.getData()[3]));
+		}
 	}
 }
